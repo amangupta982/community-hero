@@ -1,0 +1,12 @@
+# Docker build context ignore — mirrors .gcloudignore logic.
+# client/.env is intentionally INCLUDED (contains the public Maps JS API key
+# that Vite bakes into the frontend bundle at build time).
+# server/.env is excluded — GEMINI_API_KEY is injected at runtime by Cloud Run.
+
+node_modules/
+**/node_modules/
+.git/
+*.log
+client/dist/
+.DS_Store
+server/.env

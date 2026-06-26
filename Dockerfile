@@ -13,14 +13,12 @@ RUN npm install --prefix server --omit=dev
 COPY client/package*.json ./client/
 RUN npm install --prefix client
 
-# Copy the rest of the source
+# Copy the rest of the source (client/.env is included via .dockerignore config)
 COPY . .
 
-# The Maps key is needed at BUILD time (Vite bakes it into the bundle).
-# Cloud Run passes it as a build-time substitution via --set-env-vars only at
-# runtime, so for Docker builds we accept it as a build arg too.
-ARG VITE_MAPS_KEY
-ENV VITE_MAPS_KEY=$VITE_MAPS_KEY
+# Vite reads VITE_MAPS_KEY from client/.env during the build.
+# Do NOT set ENV VITE_MAPS_KEY here — an empty env var would override the .env file
+# (Vite prioritizes process env vars over .env files).
 RUN npm run build --prefix client
 
 # Cloud Run sets PORT (defaults to 8080). The server reads process.env.PORT.

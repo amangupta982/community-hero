@@ -1,8 +1,13 @@
-node_modules/
-**/node_modules/
-.git/
-*.log
-.env
-**/.env
+#!include:.gitignore
+
+# Override .gitignore: client/.env MUST be uploaded (contains the public Maps JS key
+# that Vite bakes into the frontend at build time). The ! negation undoes the
+# blanket .env exclusion inherited from .gitignore.
+!client/.env
+
+# Keep server/.env excluded (contains GEMINI_API_KEY — a real secret).
+server/.env
+
+# Already in .gitignore but repeated for clarity:
 client/dist/
 .DS_Store
