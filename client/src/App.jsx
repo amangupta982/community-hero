@@ -33,13 +33,22 @@ function fileToDataUrl(file) {
   });
 }
 
+// Returns { coords, reason }. coords is {lat,lng} or null.
+// reason explains a null so the UI can show something useful instead of failing silently.
 function getLocation() {
   return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null);
+    if (!navigator.geolocation) {
+      return resolve({ coords: null, reason: "unsupported" });
+    }
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve(null),
-      { enableHighAccuracy: true, timeout: 8000 }
+      (pos) => resolve({ coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }, reason: null }),
+      (err) => {
+        // 1 = permission denied, 2 = position unavailable, 3 = timeout
+        const reason =
+          err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
+        resolve({ coords: null, reason });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   });
 }
@@ -82,9 +91,21 @@ export default function App() {
         coords = DEMO_SPOTS[demoStep.current % DEMO_SPOTS.length];
         demoStep.current += 1;
       } else {
-        const [p, loc] = await Promise.all([fileToDataUrl(file), getLocation()]);
-        photo = p;
-        coords = loc;
+        // Request location FIRST (tied to the user's tap) so the permission
+        // prompt reliably appears, then read the file.
+        const locResult = await getLocation();
+        photo = await fileToDataUrl(file);
+        coords = locResult.coords;
+        if (!coords) {
+          // Don't block the report — but tell the user why there's no pin.
+          const msg = {
+            denied: "Location permission is blocked. Enable location for this site to map the report.",
+            unavailable: "Couldn't get a GPS fix (common on laptops/indoors). Report saved without a pin.",
+            timeout: "Location timed out. Report saved without a pin — try again outdoors.",
+            unsupported: "This device can't provide location. Report saved without a pin.",
+          }[locResult.reason] || "Location unavailable. Report saved without a pin.";
+          setError(msg);
+        }
       }
       const res = await fetch("/api/report", {
         method: "POST",
@@ -129,16 +150,16 @@ export default function App() {
     <div className="app">
       <header>
         <h1>Community&nbsp;Hero</h1>
-        <p>Spot it. Snap it. The agent handles the rest.</p>
+        <p className="tagline">Spot it. Snap it. The agent handles the rest.</p>
       </header>
 
       <div className="cta">
         <button
-          className="report-btn"
+          className={`report-btn${busy ? " agent-working" : ""}`}
           onClick={() => fileRef.current?.click()}
           disabled={busy}
         >
-          {busy ? "Analyzing photo…" : "📸 Report an Issue"}
+          {busy ? "⟳ Agent analyzing…" : "📸 Report an Issue"}
         </button>
         <input
           ref={fileRef}
@@ -210,8 +231,15 @@ export default function App() {
       </section>
 
       <section className="list">
+        <p className="section-eyebrow">Issue Tracker</p>
         <h2>Reports ({reports.length})</h2>
-        {reports.length === 0 && <p className="muted">No reports yet. Be the first.</p>}
+        {reports.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-icon">🏙️</span>
+            <p className="empty-title">No reports yet</p>
+            <p className="empty-sub">Tap the button above to photograph a civic issue — potholes, broken lights, garbage dumps. Your agent takes it from there.</p>
+          </div>
+        )}
         {reports.map((r) => (
           <article key={r.id} className="card">
             <img src={r.photo} alt={r.issueType} />
@@ -230,14 +258,21 @@ export default function App() {
                 )}
                 <span className="status">{r.status}</span>
               </div>
+              {(r.lat == null || r.lng == null) && (
+                <div className="no-loc">📍 Location unavailable — not shown on map</div>
+              )}
 
-              {!r.complaint ? (
+              {r.isCivicIssue === false || r.issueType === "Other" ? (
+                <div className="not-civic">
+                  ⚠️ Not a public infrastructure issue — no complaint needed.
+                </div>
+              ) : !r.complaint ? (
                 <button
-                  className="complaint-btn"
+                  className={`complaint-btn${draftingId === r.id ? " agent-working" : ""}`}
                   onClick={() => generateComplaint(r.id)}
                   disabled={draftingId === r.id}
                 >
-                  {draftingId === r.id ? "Drafting complaint…" : "✍️ Generate Official Complaint"}
+                  {draftingId === r.id ? "⟳ Agent drafting…" : "✍️ Generate Official Complaint"}
                 </button>
               ) : (
                 <div className="complaint-box">
