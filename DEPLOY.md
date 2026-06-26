@@ -29,23 +29,31 @@ gcloud run deploy community-hero \
   --update-env-vars GEMINI_API_KEY=your_real_gemini_key
 ```
 
-IMPORTANT — the Maps key (build-time):
-Because Vite bakes VITE_MAPS_KEY into the frontend at BUILD time, and the
-Dockerfile takes it as a build ARG, the simplest reliable approach is to put your
-Maps key directly in client/.env before deploying:
+### How the Maps key works (build-time)
+
+Vite bakes `VITE_MAPS_KEY` into the frontend JS bundle at **build time**.
+The key lives in `client/.env`:
 
 ```bash
 echo "VITE_MAPS_KEY=your_real_maps_key" > client/.env
 ```
 
-Vite reads client/.env during `npm run build` inside the container, so the map
-works in production. (client/.env is gitignored, but it IS uploaded to Cloud
-Build for the image build — that's fine; the Maps key is a public client key
-anyway, protected by HTTP-referrer restrictions, not by secrecy.)
+When you run `gcloud run deploy --source .`, the CLI uploads your source to
+Cloud Build. The `.gcloudignore` file controls what gets uploaded:
+- `client/.env` **IS uploaded** (it contains the public Maps JS key).
+- `server/.env` **IS excluded** (it contains secret keys like GEMINI_API_KEY).
 
-GEMINI_API_KEY is the real secret and is passed at runtime via --update-env-vars,
-so it never ends up in the frontend bundle. Keep it OUT of any .env that gets built
-into the client.
+Inside the Docker build, `COPY . .` copies `client/.env` into the image, and
+`npm run build --prefix client` (Vite) reads it automatically.
+
+> **IMPORTANT:** If the map shows "Add VITE_MAPS_KEY to see the map" after
+> deploying, check that:
+> 1. `client/.env` exists and contains `VITE_MAPS_KEY=AIza...`
+> 2. `.gcloudignore` does NOT have a blanket `.env` exclusion
+> 3. `.gitignore` exclusions don't override `.gcloudignore` (check `.gcloudignore` has its own explicit `server/.env` exclusion)
+
+GEMINI_API_KEY is the real secret and is passed at **runtime** via `--update-env-vars`,
+so it never ends up in the frontend bundle. Keep it OUT of `client/.env`.
 
 Notes:
 - `--source .` with a Dockerfile present → Cloud Build uses the Dockerfile.
@@ -73,9 +81,9 @@ touch it — verify the link works and leave it live through the evaluation peri
 ## If the build fails
 - "PERMISSION_DENIED" on cloudbuild → re-run the `gcloud services enable` line.
 - Build can't find a script → make sure you're in the ROOT folder (root package.json present).
-- App loads but map is blank → VITE_MAPS_KEY wasn't passed, or Maps JavaScript API
-  isn't enabled in your project. Enable it and redeploy.
+- App loads but map is blank → `VITE_MAPS_KEY` wasn't in `client/.env`, or Maps
+  JavaScript API isn't enabled in your project. Check Cloud Run logs for the
+  `[static]` diagnostic line to confirm the bundle was built.
 - App loads but "Analysis failed" → GEMINI_API_KEY wasn't passed or is wrong.
   Check: Cloud Run → your service → Revisions → the env vars are listed.
-```
-```
+

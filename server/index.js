@@ -63,8 +63,14 @@ const SYSTEM_INSTRUCTION = `You are a municipal civic-infrastructure inspector.
 Given a citizen's photo, identify the public infrastructure problem it shows.
 Judge severity by public risk: a deep pothole on a fast road or an exposed live
 wire is Critical; minor cosmetic wear is Low. Be factual and conservative.
-If the image shows no civic/public-infrastructure problem (e.g. a selfie, food,
-a pet), set isCivicIssue to false and issueType to "Other".`;
+
+CRITICAL RULE: Only real, visible PUBLIC infrastructure problems count as civic
+issues. If the photo shows a personal object (laptop, phone, food, snack packet,
+a person, a pet, a screen, indoor items) or anything that is NOT a public
+infrastructure problem, you MUST set isCivicIssue to false, issueType to "Other",
+and severity to "Low". NEVER invent a hazard that is not plainly visible. Do not
+speculate about wiring, panels, or dangers that you cannot actually see. Describe
+only what is literally in the image.`;
 
 // Strip a data-URL prefix and return {data, mimeType} for Gemini.
 function parseDataUrl(dataUrl) {
@@ -214,6 +220,16 @@ app.post("/api/report/:id/complaint", async (req, res) => {
   try {
     const report = reports.find((r) => r.id === Number(req.params.id));
     if (!report) return res.status(404).json({ error: "report not found" });
+
+    // GUARD: never draft an official complaint for something that isn't a real
+    // civic issue. The agent must refuse rather than hallucinate a hazard.
+    if (report.isCivicIssue === false || report.issueType === "Other") {
+      return res.status(422).json({
+        error: "not_civic",
+        message:
+          "This doesn't appear to be a public infrastructure issue, so no official complaint was drafted.",
+      });
+    }
 
     const department = DEPARTMENT_BY_ISSUE[report.issueType] || "General Grievance Cell";
     const locationStr =
