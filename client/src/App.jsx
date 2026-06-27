@@ -1,291 +1,180 @@
-import React, { useEffect, useRef, useState } from "react";
-import { GoogleMap, useLoadScript, MarkerF, InfoWindowF } from "@react-google-maps/api";
-
-// Your Google Maps JS API key. Set it in client/.env as VITE_MAPS_KEY.
-const MAPS_KEY = import.meta.env.VITE_MAPS_KEY || "";
-
-const SEVERITY_COLOR = {
-  Low: "#3b82f6",
-  Medium: "#f59e0b",
-  High: "#f97316",
-  Critical: "#ef4444",
-};
-
-// Bengaluru as a sensible default center until we have the user's location.
-const DEFAULT_CENTER = { lat: 12.9716, lng: 77.5946 };
-
-// DEMO MODE coordinates. The first two are ~12m apart, so same-type reports
-// there will MERGE into one cluster ("2 citizens reported"). The third is far
-// away and stays separate. This lets us demonstrate clustering live on a laptop
-// where real GPS doesn't work, without faking anything on the server.
-const DEMO_SPOTS = [
-  { lat: 12.97160, lng: 77.59460, label: "MG Road" },        // cluster A
-  { lat: 12.97168, lng: 77.59466, label: "MG Road (nearby)" }, // ~12m -> merges with A
-  { lat: 12.93420, lng: 77.62100, label: "Koramangala" },     // far -> separate
-];
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
-// Returns { coords, reason }. coords is {lat,lng} or null.
-// reason explains a null so the UI can show something useful instead of failing silently.
-function getLocation() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      return resolve({ coords: null, reason: "unsupported" });
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }, reason: null }),
-      (err) => {
-        // 1 = permission denied, 2 = position unavailable, 3 = timeout
-        const reason =
-          err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
-        resolve({ coords: null, reason });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  });
-}
+import { useState, useRef } from "react";
+import { useReports } from "./hooks/useReports.js";
+import { useDemo }    from "./hooks/useDemo.js";
+import Navbar           from "./components/Navbar.jsx";
+import ReportButton     from "./components/ReportButton.jsx";
+import DemoToggle       from "./components/DemoToggle.jsx";
+import MapView          from "./components/MapView.jsx";
+import ReportList       from "./components/ReportList.jsx";
+import PipelineProgress from "./components/PipelineProgress.jsx";
+import WorkflowProgress from "./components/WorkflowProgress.jsx";
+import ReportDetail     from "./components/ReportDetail.jsx";
+import DashboardShell   from "./components/Dashboard/DashboardShell.jsx";
+import DemoPanel        from "./components/Demo/DemoPanel.jsx";
 
 export default function App() {
-  const [reports, setReports] = useState([]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [active, setActive] = useState(null); // selected map marker
-  const [draftingId, setDraftingId] = useState(null); // which report's complaint is generating
-  const [demoMode, setDemoMode] = useState(false);
-  const demoStep = useRef(0);
-  const fileRef = useRef(null);
+  const [view, setView] = useState("app");
+  const [selectedReportId, setSelectedReportId] = useState(null);
 
-  const { isLoaded } = useLoadScript({ googleMapsApiKey: MAPS_KEY });
+  const {
+    reports,
+    loading,
+    busy,
+    error,
+    draftingId,
+    pipelineSteps,
+    showPipeline,
+    hasMore,
+    loadingMore,
+    mergedClusterId,
+    loadReports,
+    onPhotoChosen,
+    onGenerateComplaint,
+    loadMore,
+    dismissPipeline,
+  } = useReports();
 
-  async function loadReports() {
-    try {
-      const r = await fetch("/api/reports");
-      setReports(await r.json());
-    } catch {
-      /* ignore on first load */
-    }
+  const {
+    demoMode,
+    getDemoCoords,
+    toggleDemoMode,
+    seedStatus,
+    resetStatus,
+    seedDemoData,
+    resetDemoData,
+    prepareScenario,
+    nextSpotLabel,
+  } = useDemo();
+
+  const reportTriggerRef = useRef(null);
+
+  function handleFileChosen(file) {
+    onPhotoChosen(file, { demoMode, getDemoCoords });
   }
 
-  useEffect(() => {
-    loadReports();
-  }, []);
-
-  async function onPhotoChosen(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError("");
-    setBusy(true);
-    try {
-      let photo, coords;
-      if (demoMode) {
-        // Cycle through fixed demo spots so clustering is demonstrable on a laptop.
-        photo = await fileToDataUrl(file);
-        coords = DEMO_SPOTS[demoStep.current % DEMO_SPOTS.length];
-        demoStep.current += 1;
-      } else {
-        // Request location FIRST (tied to the user's tap) so the permission
-        // prompt reliably appears, then read the file.
-        const locResult = await getLocation();
-        photo = await fileToDataUrl(file);
-        coords = locResult.coords;
-        if (!coords) {
-          // Don't block the report — but tell the user why there's no pin.
-          const msg = {
-            denied: "Location permission is blocked. Enable location for this site to map the report.",
-            unavailable: "Couldn't get a GPS fix (common on laptops/indoors). Report saved without a pin.",
-            timeout: "Location timed out. Report saved without a pin — try again outdoors.",
-            unsupported: "This device can't provide location. Report saved without a pin.",
-          }[locResult.reason] || "Location unavailable. Report saved without a pin.";
-          setError(msg);
-        }
-      }
-      const res = await fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photo, lat: coords?.lat ?? null, lng: coords?.lng ?? null }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Analysis failed");
-      }
-      await loadReports();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
+  function handleDemoPipeline(spot) {
+    prepareScenario(spot);
+    reportTriggerRef.current?.();
   }
 
-  async function generateComplaint(id) {
-    setDraftingId(id);
-    setError("");
-    try {
-      const res = await fetch(`/api/report/${id}/complaint`, { method: "POST" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Could not draft complaint");
-      }
-      await loadReports();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setDraftingId(null);
-    }
+  function handleDemoDuplicate(spot) {
+    prepareScenario(spot);
+    reportTriggerRef.current?.();
   }
 
-  const mapCenter =
-    reports.find((r) => r.lat && r.lng) ?
-      { lat: reports[0].lat, lng: reports[0].lng } : DEFAULT_CENTER;
+  if (view === "dashboard") {
+    return <DashboardShell onBack={() => setView("app")} />;
+  }
+
+  const today      = new Date().toDateString();
+  const todayCount = reports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === today).length;
+
+  const selectedReport = selectedReportId ? reports.find(r => r.id === selectedReportId) ?? null : null;
+  const workflowReport = selectedReport ?? reports[0] ?? null;
 
   return (
-    <div className="app">
-      <header>
-        <h1>Community&nbsp;Hero</h1>
-        <p className="tagline">Spot it. Snap it. The agent handles the rest.</p>
-      </header>
+    <div className={`app-shell${selectedReport ? " has-detail" : ""}`}>
+      <Navbar reports={reports} onDashboard={() => setView("dashboard")} />
 
-      <div className="cta">
-        <button
-          className={`report-btn${busy ? " agent-working" : ""}`}
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-        >
-          {busy ? "⟳ Agent analyzing…" : "📸 Report an Issue"}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={onPhotoChosen}
-        />
-        {error && <div className="error">{error}</div>}
+      <main className="main-content">
+        {/* ── Top header bar ── */}
+        <div className="top-header">
+          <ReportButton busy={busy} onFileChosen={handleFileChosen} triggerRef={reportTriggerRef} />
 
-        <label className="demo-toggle">
-          <input
-            type="checkbox"
-            checked={demoMode}
-            onChange={(e) => { setDemoMode(e.target.checked); demoStep.current = 0; }}
-          />
-          Demo mode (simulates GPS — first two reports cluster, third is separate)
-        </label>
-        {demoMode && (
-          <div className="demo-hint">
-            Next report → <strong>{DEMO_SPOTS[demoStep.current % DEMO_SPOTS.length].label}</strong>
-          </div>
-        )}
-      </div>
+          <DemoToggle demoMode={demoMode} nextSpotLabel={nextSpotLabel} onToggle={toggleDemoMode} />
 
-      <section className="map-wrap">
-        {isLoaded && MAPS_KEY ? (
-          <GoogleMap
-            mapContainerClassName="map"
-            center={mapCenter}
-            zoom={13}
-            options={{ streetViewControl: false, mapTypeControl: false }}
-          >
-            {reports
-              .filter((r) => r.lat && r.lng)
-              .map((r) => (
-                <MarkerF
-                  key={r.id}
-                  position={{ lat: r.lat, lng: r.lng }}
-                  onClick={() => setActive(r)}
-                  icon={{
-                    path: window.google.maps.SymbolPath.CIRCLE,
-                    scale: 9,
-                    fillColor: SEVERITY_COLOR[r.severity] || "#3b82f6",
-                    fillOpacity: 1,
-                    strokeColor: "#fff",
-                    strokeWeight: 2,
-                  }}
-                />
-              ))}
-            {active && active.lat && (
-              <InfoWindowF
-                position={{ lat: active.lat, lng: active.lng }}
-                onCloseClick={() => setActive(null)}
-              >
-                <div className="iw">
-                  <strong>{active.issueType}</strong> · {active.severity}
-                  <div>{active.description}</div>
-                </div>
-              </InfoWindowF>
-            )}
-          </GoogleMap>
-        ) : (
-          <div className="map placeholder">
-            {MAPS_KEY ? "Loading map…" : "Add VITE_MAPS_KEY to see the map"}
-          </div>
-        )}
-      </section>
-
-      <section className="list">
-        <p className="section-eyebrow">Issue Tracker</p>
-        <h2>Reports ({reports.length})</h2>
-        {reports.length === 0 && (
-          <div className="empty-state">
-            <span className="empty-icon">🏙️</span>
-            <p className="empty-title">No reports yet</p>
-            <p className="empty-sub">Tap the button above to photograph a civic issue — potholes, broken lights, garbage dumps. Your agent takes it from there.</p>
-          </div>
-        )}
-        {reports.map((r) => (
-          <article key={r.id} className="card">
-            <img src={r.photo} alt={r.issueType} />
-            <div className="card-body">
-              <div className="row">
-                <span className="type">{r.issueType}</span>
-                <span className="pill" style={{ background: SEVERITY_COLOR[r.severity] }}>
-                  {r.severity}
-                </span>
+          {reports.length > 0 && (
+            <div className="top-header-stats">
+              <div className="top-header-stat">
+                <span className="top-header-stat-n">{reports.length}</span>
+                <span className="top-header-stat-l">Issue{reports.length !== 1 ? "s" : ""}</span>
               </div>
-              <p className="desc">{r.description}</p>
-              <div className="meta">
-                <span>Confidence {Math.round(r.confidence)}%</span>
-                {r.reportCount > 1 && (
-                  <span className="cluster">👥 {r.reportCount} citizens reported</span>
-                )}
-                <span className="status">{r.status}</span>
+              <div className="top-header-stat">
+                <span className="top-header-stat-n">{todayCount}</span>
+                <span className="top-header-stat-l">Today</span>
               </div>
-              {(r.lat == null || r.lng == null) && (
-                <div className="no-loc">📍 Location unavailable — not shown on map</div>
-              )}
-
-              {r.isCivicIssue === false || r.issueType === "Other" ? (
-                <div className="not-civic">
-                  ⚠️ Not a public infrastructure issue — no complaint needed.
-                </div>
-              ) : !r.complaint ? (
-                <button
-                  className={`complaint-btn${draftingId === r.id ? " agent-working" : ""}`}
-                  onClick={() => generateComplaint(r.id)}
-                  disabled={draftingId === r.id}
-                >
-                  {draftingId === r.id ? "⟳ Agent drafting…" : "✍️ Generate Official Complaint"}
-                </button>
-              ) : (
-                <div className="complaint-box">
-                  <div className="complaint-head">
-                    📨 Drafted complaint → <strong>{r.department}</strong>
-                  </div>
-                  <pre className="complaint-text">{r.complaint}</pre>
-                </div>
-              )}
             </div>
-          </article>
-        ))}
-      </section>
+          )}
+
+          <div className="top-header-actions">
+            <button className="nav-dashboard-btn" onClick={() => setView("dashboard")} aria-label="Open city intelligence dashboard">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden>
+                <rect x="1" y="10" width="5" height="9" rx="1" fill="currentColor"/>
+                <rect x="7.5" y="5" width="5" height="14" rx="1" fill="currentColor"/>
+                <rect x="14" y="1" width="5" height="18" rx="1" fill="currentColor"/>
+              </svg>
+              Dashboard
+            </button>
+            <button className="top-header-icon-btn" aria-label="Notifications">
+              <svg width="16" height="16" viewBox="0 0 20 22" fill="none">
+                <path d="M10 1a6 6 0 0 1 6 6v4l2 4H2l2-4V7a6 6 0 0 1 6-6z" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M8 18a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+            </button>
+            <button className="top-header-icon-btn" aria-label="Toggle theme">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M10 1v2M10 17v2M1 10h2M17 10h2M3.5 3.5l1.4 1.4M15.1 15.1l1.4 1.4M3.5 16.5l1.4-1.4M15.1 4.9l1.4-1.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {error && <div className="error" role="alert">{error}</div>}
+
+        {/* ── Content area (center + optional detail panel) ── */}
+        <div className="content-body">
+          <div className="center-col">
+            {/* Workflow Progress OR Live Pipeline */}
+            {showPipeline ? (
+              <PipelineProgress steps={pipelineSteps} busy={busy} onDismiss={dismissPipeline} />
+            ) : workflowReport ? (
+              <WorkflowProgress report={workflowReport} />
+            ) : null}
+
+            {/* Map */}
+            <section className="map-wrap" aria-label="Issue map">
+              <MapView reports={reports} />
+            </section>
+
+            {/* Report list */}
+            <ReportList
+              reports={reports}
+              loading={loading}
+              draftingId={draftingId}
+              onGenerateComplaint={onGenerateComplaint}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadMore}
+              mergedClusterId={mergedClusterId}
+              onSelect={setSelectedReportId}
+            />
+          </div>
+
+          {/* Detail panel */}
+          {selectedReport && (
+            <ReportDetail
+              report={selectedReport}
+              onClose={() => setSelectedReportId(null)}
+              onGenerateComplaint={onGenerateComplaint}
+              draftingId={draftingId}
+            />
+          )}
+        </div>
+      </main>
+
+      {demoMode && (
+        <DemoPanel
+          seedStatus={seedStatus}
+          resetStatus={resetStatus}
+          onSeed={() => seedDemoData(() => loadReports({ replace: true }))}
+          onReset={() => resetDemoData(() => loadReports({ replace: true }))}
+          onPipeline={handleDemoPipeline}
+          onDuplicate={handleDemoDuplicate}
+          onDashboard={() => setView("dashboard")}
+          onClose={() => toggleDemoMode(false)}
+        />
+      )}
     </div>
   );
 }
