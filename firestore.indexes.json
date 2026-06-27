@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "clusters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "issueType",    "order": "ASCENDING" },
+        { "fieldPath": "isCivicIssue", "order": "ASCENDING" },
+        { "fieldPath": "lat",          "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "clusters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "issueType", "order": "ASCENDING" },
+        { "fieldPath": "lat",       "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
