@@ -1,35 +1,50 @@
 const PLACE_EMOJI = {
-  hospital:      "🏥", clinic:       "🏥",
-  school:        "🏫", college:      "🏛️", university: "🏛️", kindergarten: "🏫",
-  fire_station:  "🚒", police:       "👮",
-  bus_stop:      "🚌", bus_station:  "🚌",
-  pharmacy:      "💊",
+  hospital: "🏥",
+  clinic: "🏥",
+  school: "🏫",
+  college: "🏛️",
+  university: "🏛️",
+  kindergarten: "🏫",
+  fire_station: "🚒",
+  police: "👮",
+  bus_stop: "🚌",
+  bus_station: "🚌",
+  pharmacy: "💊",
 };
 
-const SENSITIVE = new Set(["hospital", "clinic", "school", "college", "university", "kindergarten", "fire_station", "police"]);
+const SENSITIVE = new Set([
+  "hospital",
+  "clinic",
+  "school",
+  "college",
+  "university",
+  "kindergarten",
+  "fire_station",
+  "police",
+]);
 
 const TRAFFIC_BADGE = {
-  None:     { label: "No impact",            cls: "trf-none"     },
-  Minor:    { label: "Minor disruption",     cls: "trf-minor"    },
-  Moderate: { label: "Moderate disruption",  cls: "trf-moderate" },
-  Severe:   { label: "Severe disruption",    cls: "trf-severe"   },
+  None: { label: "No impact", cls: "trf-none" },
+  Minor: { label: "Minor disruption", cls: "trf-minor" },
+  Moderate: { label: "Moderate disruption", cls: "trf-moderate" },
+  Severe: { label: "Severe disruption", cls: "trf-severe" },
 };
 
 const TIMELINE_EMOJI = {
-  "Immediate": "⚡",
-  "24 hours":  "🕐",
-  "1 week":    "📅",
-  "1 month":   "📋",
+  Immediate: "⚡",
+  "24 hours": "🕐",
+  "1 week": "📅",
+  "1 month": "📋",
 };
 
 function weatherEmoji(w) {
-  if (!w)              return "🌤️";
-  if (w.isStormy)      return "⛈️";
-  if (w.isRaining)     return "🌧️";
+  if (!w) return "🌤️";
+  if (w.isStormy) return "⛈️";
+  if (w.isRaining) return "🌧️";
   if (w.precipitation) return "🌦️";
   const c = w.condition?.toLowerCase() ?? "";
   if (c.includes("cloud")) return "☁️";
-  if (c.includes("fog"))   return "🌫️";
+  if (c.includes("fog")) return "🌫️";
   return "☀️";
 }
 
@@ -39,23 +54,23 @@ function formatCost(cost) {
     n >= 100000
       ? `₹${(n / 100000).toFixed(1)}L`
       : n >= 1000
-      ? `₹${(n / 1000).toFixed(0)}K`
-      : `₹${n}`;
+        ? `₹${(n / 1000).toFixed(0)}K`
+        : `₹${n}`;
   return `${fmt(cost.low)} – ${fmt(cost.high)}`;
 }
 
 export default function ReasoningPanel({ report }) {
-  const ctx  = report.contextResult;
+  const ctx = report.contextResult;
   const risk = report.riskAssessment;
 
   // Nothing to show if neither context nor the new risk fields are present.
-  const hasPlaces    = ctx?.available && ctx.places?.length > 0;
-  const hasWeather   = ctx?.available && ctx.weather != null;
-  const hasHistory   = ctx?.available && ctx.historical?.count > 0;
-  const hasActions   = risk?.recommendedActions?.length > 0;
+  const hasPlaces = ctx?.available && ctx.places?.length > 0;
+  const hasWeather = ctx?.available && ctx.weather != null;
+  const hasHistory = ctx?.available && ctx.historical?.count > 0;
+  const hasActions = risk?.recommendedActions?.length > 0;
   const hasReasoning = risk?.reasoningChain?.length > 0;
-  const hasCost      = risk?.repairCostEstimate?.low != null;
-  const hasTraffic   = risk?.trafficImpact && risk.trafficImpact !== "None";
+  const hasCost = risk?.repairCostEstimate?.low != null;
+  const hasTraffic = risk?.trafficImpact && risk.trafficImpact !== "None";
 
   if (!hasPlaces && !hasWeather && !hasHistory && !hasActions && !hasReasoning) return null;
 
@@ -77,9 +92,7 @@ export default function ReasoningPanel({ report }) {
               </span>
             ))}
           </div>
-          {risk?.proximityRisk && (
-            <p className="rp-note">{risk.proximityRisk}</p>
-          )}
+          {risk?.proximityRisk && <p className="rp-note">{risk.proximityRisk}</p>}
         </div>
       )}
 
@@ -110,20 +123,26 @@ export default function ReasoningPanel({ report }) {
           <div className="rp-history-row">
             <span className="rp-history-count">
               {ctx.historical.isRecurring ? "🔁" : "📌"}&nbsp;
-              {ctx.historical.count} similar report{ctx.historical.count > 1 ? "s" : ""} in 500m / 60 days
+              {ctx.historical.count} similar report{ctx.historical.count > 1 ? "s" : ""} in 500m /
+              60 days
             </span>
-            {ctx.historical.isRecurring && (
-              <span className="rp-recurring-badge">Recurring</span>
-            )}
+            {ctx.historical.isRecurring && <span className="rp-recurring-badge">Recurring</span>}
           </div>
           {ctx.historical.lastSeenDaysAgo != null && (
-            <p className="rp-note">Last seen {ctx.historical.lastSeenDaysAgo} day{ctx.historical.lastSeenDaysAgo !== 1 ? "s" : ""} ago · {ctx.historical.totalCitizenReports} total citizens affected</p>
+            <p className="rp-note">
+              Last seen {ctx.historical.lastSeenDaysAgo} day
+              {ctx.historical.lastSeenDaysAgo !== 1 ? "s" : ""} ago ·{" "}
+              {ctx.historical.totalCitizenReports} total citizens affected
+            </p>
           )}
         </div>
       )}
 
       {/* ── Impact Assessment ─────────────────────────────────────── */}
-      {(hasCost || hasTraffic || risk?.urgencyScore != null || risk?.repairDurationDays != null) && (
+      {(hasCost ||
+        hasTraffic ||
+        risk?.urgencyScore != null ||
+        risk?.repairDurationDays != null) && (
         <div className="rp-section">
           <span className="rp-label">Impact</span>
           <div className="rp-impact-grid">
@@ -172,9 +191,7 @@ export default function ReasoningPanel({ report }) {
                   {TIMELINE_EMOJI[a.timeline] ?? "📌"} {a.timeline}
                 </span>
                 <span className="rp-action-text">{a.action}</span>
-                {a.responsible && (
-                  <span className="rp-responsible">{a.responsible}</span>
-                )}
+                {a.responsible && <span className="rp-responsible">{a.responsible}</span>}
               </div>
             ))}
           </div>
