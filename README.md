@@ -1,187 +1,477 @@
-# 🏙️ Community Hero
-> **Spot it. Snap it. The agent handles the rest.** A premium, hyperlocal civic infrastructure reporting and resolution platform powered by Google Gemini and Google Maps.
+<div align="center">
 
-[![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini%202.5%20Flash-blue?logo=google&logoColor=white)](https://aistudio.google.com/)
-[![Deployed on Cloud Run](https://img.shields.io/badge/Deployed%20on-Google%20Cloud%20Run-navy?logo=google-cloud&logoColor=white)](https://cloud.google.com/run)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+<img src="https://img.shields.io/badge/Node.js-20-339933?style=flat-square&logo=node.js&logoColor=white" />
+<img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" />
+<img src="https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=flat-square&logo=google&logoColor=white" />
+<img src="https://img.shields.io/badge/Cloud_Run-Deployed-4285F4?style=flat-square&logo=google-cloud&logoColor=white" />
+<img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" />
+<img src="https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat-square" />
+
+# Community Hero
+
+**AI-powered civic issue reporting for Indian municipalities.**
+
+Photograph a pothole, broken streetlight, or garbage dump. Seven Gemini agents classify the issue, score its risk, draft a formal complaint, and file it with the responsible department — all in under 30 seconds.
+
+[**Live Demo →**](https://community-hero-222244874663.asia-south1.run.app) · [Architecture](docs/Architecture.md) · [API Reference](docs/API.md) · [Deploy Guide](docs/Deployment.md)
+
+</div>
 
 ---
 
-## 💡 The Vision
+## Table of Contents
 
-Traditional civic platforms are **passive feedback forms**. They burden citizens with selecting jurisdictions, describing issues, and drafting formal complaints. Worse, they flood municipal departments with dozens of duplicate reports for the same pothole or streetlight.
-
-**Community Hero** is an **active agentic system** that shifts the burden from the citizen to the AI agent:
-1. **Report in 2 Taps**: Take a photo, hit submit.
-2. **AI Inspection**: Gemini classifies the issue type, evaluates severity, and checks if it's a real public hazard (automatically rejecting non-civic/private issues).
-3. **Smart Clustering**: Merges duplicate reports within 50 meters into a single weighted issue, amplifying community urgency.
-4. **Automated Escalation**: Drafts a formal, department-addressed municipal complaint using community-weight data (e.g., *"23 residents have reported this..."*).
+- [Overview](#overview)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Tech Stack](#tech-stack)
+- [Architecture Overview](#architecture-overview)
+- [AI Workflow](#ai-workflow)
+- [Project Structure](#project-structure)
+- [Local Setup](#local-setup)
+- [Environment Variables](#environment-variables)
+- [Google Cloud Setup](#google-cloud-setup)
+- [Firebase Setup](#firebase-setup)
+- [Deployment](#deployment)
+- [API Overview](#api-overview)
+- [Running Tests](#running-tests)
+- [Contributing](#contributing)
+- [Future Improvements](#future-improvements)
+- [License](#license)
 
 ---
 
-## 🛠️ System Architecture
+## Overview
 
-```mermaid
-graph TD
-    A[Citizen Photo & Location] -->|POST /api/report| B(Express Server)
-    B -->|Gemini 2.5 Flash Vision| C{Is it a Civic Issue?}
-    C -->|No| D[Reject / Refuse Complaint]
-    C -->|Yes| E[Haversine Geo-Clustering]
-    E -->|Within 50m| F[Merge into Existing Cluster + Escalate Severity]
-    E -->|New Area| G[Create New Cluster Card]
-    G -->|User Request| H[Draft Escalation Letter]
-    F -->|User Request| H
-    H -->|Gemini 2.5 Flash Text| I[Department-Specific Official Complaint]
-    
-    style A fill:#F4A300,stroke:#1A1F36,stroke-width:2px,color:#1A1F36
-    style B fill:#1E2A78,stroke:#fff,stroke-width:2px,color:#fff
-    style H fill:#1E2A78,stroke:#fff,stroke-width:2px,color:#fff
-    style I fill:#2a3a9a,stroke:#fff,stroke-width:2px,color:#fff
+Community Hero is a civic-tech SaaS application that lets Indian citizens report public infrastructure issues by simply taking a photo. A seven-agent AI pipeline — built on **Google Gemini 2.5 Flash** — automatically:
+
+1. Classifies the issue type and severity from the image
+2. Verifies the classification with a second-opinion agent
+3. Reverse-geocodes the location via Nominatim
+4. Fetches contextual data (nearby sensitive locations, weather, recurrence history)
+5. Scores urgency, estimates repair cost and timeline
+6. Drafts a formal complaint letter addressed to the correct municipal department
+7. Monitors pipeline health and writes an audit log
+
+Reports are stored in **Firestore** with Haversine-based geo-clustering (50 m radius), so duplicate reports from the same location are merged and escalated rather than creating noise.
+
+A **City Intelligence Dashboard** aggregates live data for three roles — citizen, field officer, and city administrator — powered by Gemini-generated insights and predictions.
+
+---
+
+## Features
+
+| Category | Details |
+|---|---|
+| **AI Classification** | Gemini 2.5 Flash vision + verification agents with structured JSON output |
+| **Dual-agent verification** | Second opinion agent overrides Vision Agent on low-confidence classifications |
+| **Live SSE streaming** | Seven pipeline steps streamed in real-time via Server-Sent Events |
+| **Geo-clustering** | Haversine deduplication within 50 m merges duplicate reports and escalates severity |
+| **Context enrichment** | Overpass API (nearby hospitals, schools), Open-Meteo weather, Firestore history |
+| **Risk scoring** | Urgency 1–10, priority 0–100, estimated cost (INR), repair timeline, traffic impact |
+| **Complaint drafting** | Formal letter auto-addressed to the correct municipal department, work order included |
+| **City Dashboard** | Three-role analytics: Citizen / Officer / City Administrator views |
+| **AI Insights** | Gemini-powered predictions, anomaly detection, and city-wide action recommendations |
+| **Pagination** | Cursor-based Firestore pagination with "Load more" |
+| **Demo Mode** | Realistic seed scenarios with a single click, safe reset |
+| **Rate limiting** | 5 pipeline requests/min per IP, 120 API requests/min |
+| **Graceful shutdown** | SIGTERM drain for Cloud Run scale-down events |
+
+---
+
+## Screenshots
+
+> Place screenshots under `docs/images/` and update the paths below.
+
+| Main View | City Dashboard | Detail Panel |
+|---|---|---|
+| `docs/images/main-view.png` | `docs/images/dashboard.png` | `docs/images/detail-panel.png` |
+
+---
+
+## Tech Stack
+
+### Backend
+
+| Package | Purpose |
+|---|---|
+| Node.js 20 (ESM) | Runtime — native ES modules, no transpilation |
+| Express 4 | HTTP server, routing, middleware |
+| `@google/genai` | Gemini 2.5 Flash — vision, verification, risk, complaint, insights |
+| `@google-cloud/firestore` | Primary database — clusters, complaints, activity logs |
+| `@google-cloud/storage` | Photo uploads (V4 signed URLs on Cloud Run) |
+| `express-rate-limit` | Pipeline (5/min) and API (120/min) rate limiting |
+| `helmet` | HTTP security headers |
+| `cors` | Cross-origin support in development; disabled in production |
+| `dotenv` | Environment variable loading |
+
+### Frontend
+
+| Package | Purpose |
+|---|---|
+| React 18 | UI library |
+| Vite 5 | Build tool and development server |
+| `@react-google-maps/api` | Google Maps JS integration |
+| Inter + Space Grotesk | Typography (Google Fonts) |
+
+### External APIs
+
+| Service | Usage |
+|---|---|
+| Nominatim (OpenStreetMap) | Reverse geocoding — road/suburb/city from lat/lng |
+| Overpass API | Nearby POIs — hospitals, schools, critical infrastructure |
+| Open-Meteo | Current weather conditions for context enrichment |
+
+### Infrastructure
+
+| Service | Usage |
+|---|---|
+| Google Cloud Run | Single-container hosting (server + built React client) |
+| Firestore | Document database with transactional clustering |
+| Cloud Storage | Photo persistence with V4 signed URLs (7-day TTL) |
+| Cloud Build | Container builds via `gcloud run deploy --source .` |
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Browser (React + Vite)                       │
+│  Navbar │ WorkflowProgress │ MapView │ ReportList │ ReportDetail   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │  HTTP / SSE
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Express Server (Cloud Run)                        │
+│                                                                     │
+│  app.js ──► routes/api.js                                          │
+│               │                                                     │
+│               ├─ GET  /api/health                                   │
+│               ├─ GET  /api/reports                                  │
+│               ├─ POST /api/report/stream ──► Agent Pipeline (SSE)  │
+│               ├─ POST /api/report         ──► Agent Pipeline (JSON)│
+│               ├─ POST /api/report/:id/complaint                     │
+│               ├─ GET  /api/dashboard/stats                          │
+│               ├─ GET  /api/dashboard/insights ──► Gemini           │
+│               ├─ POST /api/demo/seed                                │
+│               └─ POST /api/demo/reset                               │
+│                                                                     │
+│  Middleware: helmet │ cors │ express.json(12 MB) │ rateLimiter     │
+│             validateReport │ asyncHandler │ errorHandler             │
+└───────────────────────┬─────────────────┬───────────────────────────┘
+                        │                 │
+          ┌─────────────▼──┐    ┌─────────▼──────────┐
+          │   Firestore     │    │   Cloud Storage     │
+          │  clusters       │    │  photos/            │
+          │  complaints     │    │  (V4 signed URLs)   │
+          │  activity_logs  │    └────────────────────┘
+          └────────────────┘
 ```
 
----
-
-## ✨ Features
-
-### 1. Zero-Friction Camera Capture
-- Integrated with browser camera systems (`input capture="environment"`) to open the rear camera on mobile.
-- Extracts real-time latitude/longitude coordinates directly from mobile GPS for automated pin placement.
-
-### 2. Gemini-Powered Vision Analysis
-- Processes base64 image data using the **Gemini 2.5 Flash** model.
-- Uses strict JSON schema enforcement (`responseSchema`) to parse:
-  - **Issue Type** (Pothole, Streetlight, Water Leakage, Garbage, Damaged Sidewalk)
-  - **Severity** (Low, Medium, High, Critical)
-  - **Description** (One short factual sentence describing only what is visible)
-  - **Validation Flag** (Rejects photos of laptops, personal items, or indoor objects)
-
-### 3. Geospatial Haversine Clustering
-- Uses the **Haversine Formula** to determine the precise distance between reports.
-- If a new report matches an existing report type and falls within **50 meters** of its coordinates, it is automatically merged.
-- Duplicate reports increase the "citizen report count" and escalate severity to the highest level reported by the community.
-
-### 4. Jurisdiction-Aware Official Drafting
-- Maps civic issues to the correct municipal division (e.g., *Roads & Infrastructure*, *Solid Waste Management*, *Water Supply & Sewerage*).
-- Drafts a professional, formal complaint letter addressing the division head, dynamically referencing the community support count to convey urgency.
+See [docs/Architecture.md](docs/Architecture.md) for the full Mermaid diagram and data-flow details.
 
 ---
 
-## 📦 Project Structure
+## AI Workflow
+
+The 7-agent pipeline runs sequentially. Each agent emits SSE events the browser renders in real-time.
 
 ```
-├── client/                 # React (Vite) Frontend App
+Photo (base64 data URL)
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Agent 1 · Vision        │ Gemini vision + JSON schema           │
+│                         │ → issueType, severity, confidence     │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 2 · Verification  │ Second Gemini call with full image    │
+│                         │ → confirms or overrides Agent 1       │
+│                         │ → non-civic images rejected here      │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 3 · Geo           │ Nominatim reverse geocode             │
+│                         │ → road, suburb, city, district        │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 4 · Context       │ Overpass nearby places (≤500 m)       │
+│                         │ + Open-Meteo current weather          │
+│                         │ + Firestore recurrence count          │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 5 · Risk          │ Gemini: urgency 1–10, priority 0–100  │
+│                         │ + cost estimate (INR) + actions       │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 6 · Complaint     │ Gemini: formal letter + work order    │
+│                         │ + citizen summary + follow-up date    │
+├─────────────────────────────────────────────────────────────────┤
+│ Agent 7 · Monitoring    │ Anomaly detection, audit log          │
+│                         │ + pipeline health metrics             │
+└─────────────────────────────────────────────────────────────────┘
+       │
+       ▼
+Firestore transaction: geo-cluster or create new cluster
+       │
+       ▼
+SSE: pipeline_complete → { cluster, merged, pipelineId }
+```
+
+See [docs/Gemini.md](docs/Gemini.md) for prompts, schemas, and retry strategy.
+
+---
+
+## Project Structure
+
+```
+community-hero/
+├── client/                        # React + Vite frontend
 │   ├── src/
-│   │   ├── App.jsx         # Primary application dashboard & state
-│   │   ├── styles.css      # Custom "Civic-Modern" UI design system
-│   │   └── main.jsx
-│   ├── index.html          # Web entrypoint & Google Fonts setup
+│   │   ├── App.jsx                # Root — 3-column layout, selectedReportId state
+│   │   ├── components/
+│   │   │   ├── Dashboard/         # City Intelligence Dashboard (4 role views)
+│   │   │   ├── Demo/              # Demo mode panel
+│   │   │   ├── MapView.jsx        # Google Maps with cluster markers
+│   │   │   ├── ReportCard.jsx     # Compact issue card
+│   │   │   ├── ReportDetail.jsx   # Right-panel 4-tab detail view
+│   │   │   ├── WorkflowProgress.jsx # 7-step horizontal stepper
+│   │   │   ├── PipelineProgress.jsx # Live agent pipeline progress
+│   │   │   ├── StatusTimeline.jsx # Issue lifecycle timeline
+│   │   │   ├── ReasoningPanel.jsx # AI reasoning breakdown
+│   │   │   └── ComplaintBox.jsx   # Complaint/work-order/citizen tabs
+│   │   ├── hooks/
+│   │   │   ├── useReports.js      # Report CRUD + SSE stream consumer
+│   │   │   ├── useDemo.js         # Demo mode state management
+│   │   │   └── useDashboard.js    # Dashboard data fetching
+│   │   ├── services/api.js        # All API calls + SSE async generator
+│   │   ├── constants/index.js     # Issue types, severity colors, dept emails
+│   │   └── utils/
+│   │       ├── file.js            # File → base64 conversion
+│   │       └── pdf.js             # Client-side complaint PDF generation
 │   └── vite.config.js
-├── server/                 # Express API Backend
-│   └── index.js            # Server app, Gemini routes, and static file hosting
-├── Dockerfile              # Unified build config (Vite Client + Express Server)
-├── .gcloudignore           # Cloud Build exclusion overrides
-├── .dockerignore           # Local Docker context exclusions
-└── DEPLOY.md               # Detailed Cloud Run deployment guide
+│
+├── server/                        # Express API
+│   ├── agents/
+│   │   ├── base.js                # BaseAgent: retry (×2), timing, SSE events
+│   │   ├── pipeline.js            # Orchestrator: runs all 7 agents in sequence
+│   │   ├── vision.js              # Agent 1: Gemini image classification
+│   │   ├── verification.js        # Agent 2: second-opinion override
+│   │   ├── geo.js                 # Agent 3: Nominatim geocoding
+│   │   ├── context.js             # Agent 4: Overpass + weather + history
+│   │   ├── risk.js                # Agent 5: urgency/priority scoring
+│   │   ├── complaint.js           # Agent 6: letter + work order
+│   │   └── monitoring.js          # Agent 7: anomaly detection + audit
+│   ├── config/index.js            # Gemini AI, Firestore, GCS singletons
+│   ├── constants/index.js         # Issue enums, dept map, Gemini schemas
+│   ├── controllers/               # Route handlers
+│   ├── middleware/                # errorHandler, rateLimiter, validateReport
+│   ├── routes/api.js              # All route definitions
+│   ├── services/                  # clustering, dashboardStats, gemini, storage
+│   ├── store/                     # Firestore CRUD (clusters, complaints, logs)
+│   ├── utils/                     # asyncHandler, parseDataUrl
+│   ├── demo/seedData.js           # Demo scenarios
+│   ├── tests/                     # Vitest unit tests
+│   ├── app.js                     # Express app factory
+│   └── index.js                   # Entry point + graceful SIGTERM shutdown
+│
+├── docs/                          # Extended documentation
+├── .github/                       # CI, issue templates, PR template
+├── Dockerfile                     # Single-container build
+├── firestore.indexes.json         # Composite index definitions
+└── package.json                   # Root coordinator scripts
 ```
 
 ---
 
-## 💻 Tech Stack Rationale
-
-| Layer | Technology | Rationale |
-| :--- | :--- | :--- |
-| **Frontend** | React (Vite) | Instant hot reloading, super small bundle footprint, and efficient rendering. |
-| **Backend** | Node.js + Express | Lightweight, single-thread event loop suitable for streaming uploads and asynchronous model requests. |
-| **Styling** | Vanilla CSS3 | Custom variables and custom layout architecture to match design tokens without Tailwind bloat. |
-| **AI Model** | Gemini 2.5 Flash | High speed, reliable structured JSON output capability, and state-of-the-art vision reasoning. |
-| **Database** | In-Memory (Phase 1) | Ultra-fast local testing; prepared for clean Firestore swap in final production. |
-| **Deployment**| Google Cloud Run | Serverless scaling, automatic HTTPS (required for camera/GPS APIs), and simple source-to-service deployments. |
-
----
-
-## 🚦 Getting Started
+## Local Setup
 
 ### Prerequisites
-- Node.js (version 20 or higher)
-- A Google Gemini API Key (from [Google AI Studio](https://aistudio.google.com/))
-- A Google Maps JavaScript API Key (from [Google Cloud Console](https://console.cloud.google.com/))
 
-### 1. Environment Setup
-Create a `.env` file in the `client/` subdirectory:
-```bash
-# client/.env
-VITE_MAPS_KEY=your_google_maps_javascript_api_key
-```
+- **Node.js ≥ 20** (`node --version`)
+- **gcloud CLI** — [install guide](https://cloud.google.com/sdk/docs/install)
+- **Firebase CLI** — `npm install -g firebase-tools`
+- A Google Cloud project with billing enabled
 
-### 2. Local Run
-To run both the backend Express API and the frontend Vite server concurrently with dev proxies:
+### 1. Clone and install
 
 ```bash
-# Install dependencies for both projects
+git clone https://github.com/YOUR_USERNAME/community-hero.git
+cd community-hero
 npm run install:all
-
-# Run Express Backend (Terminal 1)
-cd server
-GEMINI_API_KEY=your_gemini_api_key npm start
-
-# Run Vite Frontend (Terminal 2)
-cd client
-npm run dev
 ```
 
-The React frontend will launch at `http://localhost:5173`, proxying `/api/*` requests to the Express backend on `http://localhost:8080`.
+### 2. Configure environment variables
+
+```bash
+cp server/.env.example server/.env
+# Edit server/.env with your GEMINI_API_KEY, GOOGLE_CLOUD_PROJECT, GCS_BUCKET_NAME
+
+cp client/.env.example client/.env
+# Edit client/.env with your VITE_MAPS_KEY
+```
+
+### 3. Authenticate with Google Cloud
+
+```bash
+gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+```
+
+### 4. Start development servers
+
+```bash
+# Terminal 1 — Express API
+npm run dev --prefix server          # :3001 (or PORT env var)
+
+# Terminal 2 — Vite dev server (proxies /api → :3001)
+npm run dev --prefix client          # :5174
+```
+
+Open [http://localhost:5174](http://localhost:5174).
+
+> **Local photo storage note:** Outside Cloud Run, `storage.js` detects the absence of `K_SERVICE` and returns the base64 data URL as the photo reference instead of a signed URL. The object still uploads to GCS. See [docs/CloudStorage.md](docs/CloudStorage.md) for details.
 
 ---
 
-## 🚀 Deployed Production Build
+## Environment Variables
 
-The production build runs inside a unified Docker container. Express serves both the REST API endpoints and the precompiled static React frontend from `client/dist`.
+### `server/.env`
 
-### Dockerized Build (Local Test)
-To build and run the combined Docker container locally:
+| Variable | Required | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | ✅ | Google AI Studio key — [aistudio.google.com](https://aistudio.google.com/) |
+| `GOOGLE_CLOUD_PROJECT` | ✅ | GCP project ID |
+| `GCS_BUCKET_NAME` | ✅ | Cloud Storage bucket for photo uploads |
+| `SERVICE_ACCOUNT_EMAIL` | Cloud Run | Service account email for V4 signed URL signing |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Local dev | Path to service account JSON key (alternative to ADC) |
+| `PORT` | Optional | Server port (default: `8080`) |
+| `NODE_ENV` | Optional | `production` disables CORS permissiveness and rate-limit skipping |
+
+### `client/.env`
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_MAPS_KEY` | ✅ | Google Maps JS API key — baked into the bundle at build time |
+
+---
+
+## Google Cloud Setup
+
 ```bash
-docker build -t community-hero .
-docker run -p 8080:8080 -e GEMINI_API_KEY="your_gemini_key" community-hero
+# Enable required APIs
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  firestore.googleapis.com \
+  storage.googleapis.com \
+  iam.googleapis.com
+
+# Create Firestore (Native mode)
+gcloud firestore databases create --location=asia-south1
+
+# Create Cloud Storage bucket
+gsutil mb -l asia-south1 gs://YOUR_BUCKET_NAME
+
+# Grant the Cloud Run SA storage write access
+PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')
+SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+gcloud storage buckets add-iam-policy-binding gs://YOUR_BUCKET_NAME \
+  --member="serviceAccount:${SA}" \
+  --role="roles/storage.objectAdmin"
+
+# Allow SA to create V4 signed URLs (workload identity)
+gcloud iam service-accounts add-iam-policy-binding "${SA}" \
+  --member="serviceAccount:${SA}" \
+  --role="roles/iam.serviceAccountTokenCreator"
 ```
 
-### Cloud Run Deployment
-Deploy from the project root using Google Cloud SDK:
+---
+
+## Firebase Setup
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase use YOUR_PROJECT_ID
+
+# Deploy composite indexes (takes 1–10 minutes to build)
+firebase deploy --only firestore:indexes
+```
+
+The server degrades gracefully while indexes are building — it falls back to unindexed queries and continues serving. See [docs/Firestore.md](docs/Firestore.md).
+
+---
+
+## Deployment
+
 ```bash
 gcloud run deploy community-hero \
   --source . \
   --region asia-south1 \
   --allow-unauthenticated \
-  --update-env-vars GEMINI_API_KEY=your_gemini_api_key \
-  --clear-base-image
+  --update-env-vars GEMINI_API_KEY=YOUR_GEMINI_KEY
 ```
-*Note: The `--clear-base-image` flag ensures that Cloud Run builds directly from the root `Dockerfile` instead of relying on buildpacks.*
+
+The Dockerfile builds the React client during the container build (Vite reads `client/.env` for `VITE_MAPS_KEY`). The same container serves both the API at `/api/*` and the React SPA at all other paths.
+
+See [docs/Deployment.md](docs/Deployment.md) for rollback, custom domains, and environment configuration.
 
 ---
 
-## 📡 API Specification
+## API Overview
 
-### `GET /api/reports`
-Returns all registered reports in reverse chronological order (newest first).
-* **Response**: `200 OK` (Array of report objects)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/health` | None | Liveness probe |
+| `GET` | `/api/reports` | None | List clusters (`?limit=&after=`) |
+| `POST` | `/api/report/stream` | None | Submit photo → SSE pipeline |
+| `POST` | `/api/report` | None | Submit photo → JSON response |
+| `POST` | `/api/report/:id/complaint` | None | Re-draft complaint |
+| `GET` | `/api/dashboard/stats` | None | Aggregated statistics |
+| `GET` | `/api/dashboard/insights` | None | Gemini predictions (5-min cache) |
+| `POST` | `/api/demo/seed` | None | Seed demo data |
+| `POST` | `/api/demo/reset` | None | Reset demo data |
 
-### `POST /api/report`
-Uploads a new report. Classifies the photo, parses location, and attempts to cluster nearby.
-* **Body**:
-  ```json
-  {
-    "photo": "data:image/jpeg;base64,...",
-    "lat": 12.9716,
-    "lng": 77.5946
-  }
-  ```
-* **Response**: `200 OK` (Report object with `merged: true/false` key)
-
-### `POST /api/report/:id/complaint`
-Requests the AI agent to compile a formal grievance letter to the responsible municipal department.
-* **Response**: `200 OK` (Updated report object with a `complaint` field containing plain-text letter)
-* **Error**: `422 Unprocessable Entity` (If the report was classified as a non-civic/private issue)
+See [docs/API.md](docs/API.md) for full schemas, SSE event types, and error codes.
 
 ---
 
-## 🛡️ License
-Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+## Running Tests
+
+```bash
+# Run server unit tests
+npm test --prefix server
+
+# Watch mode during development
+npm run test:watch --prefix server
+```
+
+Tests live in `server/tests/` and cover pure utilities (`clustering.js`, `parseDataUrl.js`) and middleware (`validateReport`, `asyncHandler`).
+
+---
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
+
+- **Bug reports:** [Bug Report template](.github/ISSUE_TEMPLATE/bug_report.yml)
+- **Feature requests:** [Feature Request template](.github/ISSUE_TEMPLATE/feature_request.yml)
+- **Security issues:** See [SECURITY.md](SECURITY.md) — do **not** open a public issue
+
+---
+
+## Future Improvements
+
+- [ ] Authentication — Firebase Auth for per-user report ownership and officer accounts
+- [ ] Push notifications — status update alerts when a complaint is actioned
+- [ ] Offline / PWA — background sync for poor-connectivity areas
+- [ ] Multi-language complaint drafting — Kannada, Hindi, Tamil
+- [ ] Webhook integration — direct API calls to BBMP, BMC, or MCGM portals
+- [ ] Map heatmap layer — density overlay for ward-level hotspot visualization
+- [ ] Persistent insight cache — Redis/Memcached instead of per-instance in-memory
+- [ ] Admin portal — officer login, claim/resolve workflow, field assignment
+- [ ] E2E tests — Playwright suite for report → pipeline → detail flow
+- [ ] APM / tracing — Cloud Trace integration for per-agent timing dashboards
+
+---
+
+## License
+
+MIT © 2026 Aman Gupta — see [LICENSE](LICENSE).
