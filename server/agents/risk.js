@@ -5,22 +5,25 @@ import { ai } from "../config/index.js";
 const SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    priorityScore:              { type: Type.NUMBER },
-    publicRiskLevel:            { type: Type.STRING, enum: ["Low", "Medium", "High", "Critical"] },
-    urgencyScore:               { type: Type.NUMBER },
-    riskFactors:                { type: Type.ARRAY, items: { type: Type.STRING } },
-    estimatedResolutionDays:    { type: Type.NUMBER },
-    repairDurationDays:         { type: Type.NUMBER },
-    escalationReason:           { type: Type.STRING },
-    affectedPopulationEstimate: { type: Type.STRING, enum: ["Minimal", "Moderate", "Significant", "Large"] },
-    trafficImpact:              { type: Type.STRING, enum: ["None", "Minor", "Moderate", "Severe"] },
+    priorityScore: { type: Type.NUMBER },
+    publicRiskLevel: { type: Type.STRING, enum: ["Low", "Medium", "High", "Critical"] },
+    urgencyScore: { type: Type.NUMBER },
+    riskFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
+    estimatedResolutionDays: { type: Type.NUMBER },
+    repairDurationDays: { type: Type.NUMBER },
+    escalationReason: { type: Type.STRING },
+    affectedPopulationEstimate: {
+      type: Type.STRING,
+      enum: ["Minimal", "Moderate", "Significant", "Large"],
+    },
+    trafficImpact: { type: Type.STRING, enum: ["None", "Minor", "Moderate", "Severe"] },
     repairCostEstimate: {
       type: Type.OBJECT,
       properties: {
-        low:      { type: Type.NUMBER },
-        high:     { type: Type.NUMBER },
+        low: { type: Type.NUMBER },
+        high: { type: Type.NUMBER },
         currency: { type: Type.STRING },
-        basis:    { type: Type.STRING },
+        basis: { type: Type.STRING },
       },
       required: ["low", "high", "currency"],
     },
@@ -29,22 +32,30 @@ const SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          timeline:    { type: Type.STRING },
-          action:      { type: Type.STRING },
+          timeline: { type: Type.STRING },
+          action: { type: Type.STRING },
           responsible: { type: Type.STRING },
         },
         required: ["timeline", "action"],
       },
     },
-    reasoningChain:   { type: Type.ARRAY, items: { type: Type.STRING } },
+    reasoningChain: { type: Type.ARRAY, items: { type: Type.STRING } },
     weatherInfluence: { type: Type.STRING },
-    proximityRisk:    { type: Type.STRING },
+    proximityRisk: { type: Type.STRING },
   },
   required: [
-    "priorityScore", "publicRiskLevel", "urgencyScore", "riskFactors",
-    "estimatedResolutionDays", "repairDurationDays", "escalationReason",
-    "affectedPopulationEstimate", "trafficImpact", "repairCostEstimate",
-    "recommendedActions", "reasoningChain",
+    "priorityScore",
+    "publicRiskLevel",
+    "urgencyScore",
+    "riskFactors",
+    "estimatedResolutionDays",
+    "repairDurationDays",
+    "escalationReason",
+    "affectedPopulationEstimate",
+    "trafficImpact",
+    "repairCostEstimate",
+    "recommendedActions",
+    "reasoningChain",
   ],
 };
 
@@ -80,16 +91,20 @@ weatherInfluence: one sentence on how current weather affects this specific issu
 proximityRisk: one sentence on the most significant nearby sensitive facility and how it elevates risk (or "No sensitive facilities nearby").`;
 
 class RiskAgent extends BaseAgent {
-  constructor() { super("risk"); }
+  constructor() {
+    super("risk");
+  }
 
-  startMessage() { return "Analysing public safety risk with local context…"; }
+  startMessage() {
+    return "Analysing public safety risk with local context…";
+  }
 
   publicResult(r) {
     return {
-      priorityScore:           r.priorityScore,
-      publicRiskLevel:         r.publicRiskLevel,
-      urgencyScore:            r.urgencyScore,
-      trafficImpact:           r.trafficImpact,
+      priorityScore: r.priorityScore,
+      publicRiskLevel: r.publicRiskLevel,
+      urgencyScore: r.urgencyScore,
+      trafficImpact: r.trafficImpact,
       estimatedResolutionDays: r.estimatedResolutionDays,
       affectedPopulationEstimate: r.affectedPopulationEstimate,
     };
@@ -101,25 +116,29 @@ class RiskAgent extends BaseAgent {
       : "Location not available";
 
     // ── Build contextual sections for the prompt ──────────────────────────────
-    const weather  = contextResult?.weather;
-    const places   = contextResult?.places ?? [];
-    const hist     = contextResult?.historical ?? { count: 0 };
+    const weather = contextResult?.weather;
+    const places = contextResult?.places ?? [];
+    const hist = contextResult?.historical ?? { count: 0 };
 
     const weatherSection = weather
       ? `Weather: ${weather.condition}, ${weather.temperature}°C, precipitation ${weather.precipitation} mm
 Rain ongoing: ${weather.isRaining} — ${weather.isRaining ? "wet conditions increase slip/structural risk" : "dry conditions, nominal"}`
       : "Weather data: unavailable";
 
-    const placesSection = places.length > 0
-      ? `Sensitive locations within 400m:\n${places.map((p) => `  • ${p.type}: "${p.name}" at ${p.distanceM}m`).join("\n")}`
-      : "Sensitive locations: none found within 400m";
+    const placesSection =
+      places.length > 0
+        ? `Sensitive locations within 400m:\n${places.map((p) => `  • ${p.type}: "${p.name}" at ${p.distanceM}m`).join("\n")}`
+        : "Sensitive locations: none found within 400m";
 
-    const histSection = hist.count > 0
-      ? `Historical recurrence: ${hist.count} same-type issue(s) within 500m in last 60 days` +
-        `\n  Citizens affected (cumulative): ${hist.totalCitizenReports}` +
-        `\n  Recurring: ${hist.isRecurring}` +
-        (hist.lastSeenDaysAgo != null ? `\n  Last occurrence: ${hist.lastSeenDaysAgo} day(s) ago` : "")
-      : "Historical recurrence: no prior similar issues found recently in this area";
+    const histSection =
+      hist.count > 0
+        ? `Historical recurrence: ${hist.count} same-type issue(s) within 500m in last 60 days` +
+          `\n  Citizens affected (cumulative): ${hist.totalCitizenReports}` +
+          `\n  Recurring: ${hist.isRecurring}` +
+          (hist.lastSeenDaysAgo !== null && hist.lastSeenDaysAgo !== undefined
+            ? `\n  Last occurrence: ${hist.lastSeenDaysAgo} day(s) ago`
+            : "")
+        : "Historical recurrence: no prior similar issues found recently in this area";
 
     const prompt = `Civic Issue Risk Assessment
 
@@ -145,14 +164,17 @@ Produce a full risk assessment following the system instructions. Reference spec
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         systemInstruction: SYSTEM,
-        responseMimeType:  "application/json",
-        responseSchema:    SCHEMA,
+        responseMimeType: "application/json",
+        responseSchema: SCHEMA,
       },
     });
 
     let parsed;
-    try { parsed = JSON.parse(result.text); }
-    catch { throw new Error("Risk Agent: unparseable Gemini output"); }
+    try {
+      parsed = JSON.parse(result.text);
+    } catch {
+      throw new Error("Risk Agent: unparseable Gemini output");
+    }
     return parsed;
   }
 }

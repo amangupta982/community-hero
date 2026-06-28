@@ -15,17 +15,28 @@ const SCHEMA = {
     workOrder: {
       type: Type.OBJECT,
       properties: {
-        title:               { type: Type.STRING },
-        priority:            { type: Type.STRING, enum: ["P1 - Emergency", "P2 - Urgent", "P3 - Standard", "P4 - Low"] },
-        issueSummary:        { type: Type.STRING },
-        steps:               { type: Type.ARRAY, items: { type: Type.STRING } },
-        requiredResources:   { type: Type.ARRAY, items: { type: Type.STRING } },
-        safetyPrecautions:   { type: Type.ARRAY, items: { type: Type.STRING } },
+        title: { type: Type.STRING },
+        priority: {
+          type: Type.STRING,
+          enum: ["P1 - Emergency", "P2 - Urgent", "P3 - Standard", "P4 - Low"],
+        },
+        issueSummary: { type: Type.STRING },
+        steps: { type: Type.ARRAY, items: { type: Type.STRING } },
+        requiredResources: { type: Type.ARRAY, items: { type: Type.STRING } },
+        safetyPrecautions: { type: Type.ARRAY, items: { type: Type.STRING } },
       },
       required: ["title", "priority", "steps", "requiredResources", "safetyPrecautions"],
     },
   },
-  required: ["letter", "subject", "urgencyTag", "ccDepartments", "citizenSummary", "followUpDays", "workOrder"],
+  required: [
+    "letter",
+    "subject",
+    "urgencyTag",
+    "ccDepartments",
+    "citizenSummary",
+    "followUpDays",
+    "workOrder",
+  ],
 };
 
 const SYSTEM = `You are a civic advocacy specialist drafting formal complaints and field work orders for Indian municipal corporations.
@@ -59,7 +70,9 @@ WORK ORDER (workOrder) for the field officer team:
 - safetyPrecautions: 1-3 safety measures specific to this repair type.`;
 
 class ComplaintAgent extends BaseAgent {
-  constructor() { super("complaint"); }
+  constructor() {
+    super("complaint");
+  }
 
   startMessage({ classification }) {
     return `Drafting complaint, work order & citizen summary for ${DEPARTMENT_BY_ISSUE[classification?.issueType] || "General Grievance Cell"}…`;
@@ -67,25 +80,34 @@ class ComplaintAgent extends BaseAgent {
 
   publicResult(r) {
     return {
-      subject:      r.subject,
-      urgencyTag:   r.urgencyTag,
-      department:   r.department,
+      subject: r.subject,
+      urgencyTag: r.urgencyTag,
+      department: r.department,
       followUpDays: r.followUpDays,
     };
   }
 
   async execute({ finalClassification, geoResult, riskResult, contextResult, reportCount }) {
-    const department  = DEPARTMENT_BY_ISSUE[finalClassification.issueType] || "General Grievance Cell";
+    const department =
+      DEPARTMENT_BY_ISSUE[finalClassification.issueType] || "General Grievance Cell";
     const locationStr = geoResult?.available
       ? [geoResult.road, geoResult.suburb, geoResult.city].filter(Boolean).join(", ")
-      : finalClassification.lat != null
+      : finalClassification.lat !== null
         ? `GPS ${finalClassification.lat.toFixed(5)}, ${finalClassification.lng.toFixed(5)}`
         : "location attached in app";
 
-    const weather  = contextResult?.weather;
-    const places   = contextResult?.places ?? [];
+    const weather = contextResult?.weather;
+    const places = contextResult?.places ?? [];
     const sensitiveNearby = places.filter((p) =>
-      ["hospital", "clinic", "school", "college", "kindergarten", "fire_station", "police"].includes(p.type)
+      [
+        "hospital",
+        "clinic",
+        "school",
+        "college",
+        "kindergarten",
+        "fire_station",
+        "police",
+      ].includes(p.type)
     );
 
     const prompt = `Generate a formal complaint, work order, citizen summary, and follow-up schedule for:
@@ -124,8 +146,11 @@ TO: The ${department}`;
     });
 
     let parsed;
-    try { parsed = JSON.parse(result.text); }
-    catch { throw new Error("Complaint Agent: unparseable Gemini output"); }
+    try {
+      parsed = JSON.parse(result.text);
+    } catch {
+      throw new Error("Complaint Agent: unparseable Gemini output");
+    }
     return { ...parsed, department };
   }
 }

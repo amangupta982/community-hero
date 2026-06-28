@@ -15,7 +15,14 @@ const SCHEMA = {
     verificationNotes: { type: Type.STRING },
     pass: { type: Type.BOOLEAN },
   },
-  required: ["confirmsIssueType", "confirmsIsCivicIssue", "suggestedIssueType", "suggestedSeverity", "verificationNotes", "pass"],
+  required: [
+    "confirmsIssueType",
+    "confirmsIsCivicIssue",
+    "suggestedIssueType",
+    "suggestedSeverity",
+    "verificationNotes",
+    "pass",
+  ],
 };
 
 const SYSTEM = `You are a senior verification inspector providing a second opinion.
@@ -30,9 +37,13 @@ Be strict: prefer the junior's classification unless you have clear visual evide
 verificationNotes must explain your reasoning in one sentence.`;
 
 class VerificationAgent extends BaseAgent {
-  constructor() { super("verification"); }
+  constructor() {
+    super("verification");
+  }
 
-  startMessage() { return "Cross-checking classification with independent analysis..."; }
+  startMessage() {
+    return "Cross-checking classification with independent analysis...";
+  }
 
   publicResult(r) {
     return {
@@ -55,13 +66,12 @@ Independently examine the same image and verify or correct this classification.`
 
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: [{
-        role: "user",
-        parts: [
-          { inlineData: { mimeType: img.mimeType, data: img.data } },
-          { text: prompt },
-        ],
-      }],
+      contents: [
+        {
+          role: "user",
+          parts: [{ inlineData: { mimeType: img.mimeType, data: img.data } }, { text: prompt }],
+        },
+      ],
       config: {
         systemInstruction: SYSTEM,
         responseMimeType: "application/json",
@@ -69,8 +79,11 @@ Independently examine the same image and verify or correct this classification.`
       },
     });
     let parsed;
-    try { parsed = JSON.parse(result.text); }
-    catch { throw new Error(`Verification Agent: unparseable Gemini output`); }
+    try {
+      parsed = JSON.parse(result.text);
+    } catch {
+      throw new Error(`Verification Agent: unparseable Gemini output`);
+    }
     return parsed;
   }
 }

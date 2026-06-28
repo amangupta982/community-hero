@@ -2,9 +2,13 @@ import { BaseAgent } from "./base.js";
 import { logActivity } from "../store/activity_logs.js";
 
 class MonitoringAgent extends BaseAgent {
-  constructor() { super("monitoring", { maxRetries: 0 }); }
+  constructor() {
+    super("monitoring", { maxRetries: 0 });
+  }
 
-  startMessage() { return "Logging pipeline trace and checking for anomalies..."; }
+  startMessage() {
+    return "Logging pipeline trace and checking for anomalies...";
+  }
 
   publicResult(r) {
     return {
@@ -15,7 +19,15 @@ class MonitoringAgent extends BaseAgent {
     };
   }
 
-  async execute({ timings, visionResult, verificationResult, riskResult, clusterId, merged, retryCount }) {
+  async execute({
+    timings,
+    visionResult,
+    verificationResult,
+    riskResult,
+    clusterId,
+    merged,
+    retryCount,
+  }) {
     const pipelineId = `ph3-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
     const totalDurationMs = timings.reduce((s, t) => s + t.durationMs, 0);
     const anomalies = [];
@@ -24,7 +36,9 @@ class MonitoringAgent extends BaseAgent {
       anomalies.push(`Low classification confidence: ${visionResult.confidence}%`);
     }
     if (verificationResult && !verificationResult.confirmsIssueType) {
-      anomalies.push(`Issue type corrected by Verification Agent → ${verificationResult.suggestedIssueType}`);
+      anomalies.push(
+        `Issue type corrected by Verification Agent → ${verificationResult.suggestedIssueType}`
+      );
     }
     if ((riskResult?.estimatedResolutionDays ?? 0) > 30) {
       anomalies.push(`Extended resolution estimate: ${riskResult.estimatedResolutionDays} days`);

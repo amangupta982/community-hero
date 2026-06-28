@@ -16,7 +16,15 @@ const SCHEMA = {
     rawObservations: { type: Type.ARRAY, items: { type: Type.STRING } },
     affectedInfrastructure: { type: Type.STRING },
   },
-  required: ["issueType", "severity", "description", "confidence", "isCivicIssue", "rawObservations", "affectedInfrastructure"],
+  required: [
+    "issueType",
+    "severity",
+    "description",
+    "confidence",
+    "isCivicIssue",
+    "rawObservations",
+    "affectedInfrastructure",
+  ],
 };
 
 const SYSTEM = `You are a first-pass municipal civic-infrastructure inspector.
@@ -31,24 +39,35 @@ Personal items, indoor scenes, people, pets, screens → isCivicIssue: false, is
 Never invent a hazard that is not plainly visible.`;
 
 class VisionAgent extends BaseAgent {
-  constructor() { super("vision"); }
+  constructor() {
+    super("vision");
+  }
 
-  startMessage() { return "Analyzing photo for civic infrastructure issues..."; }
+  startMessage() {
+    return "Analyzing photo for civic infrastructure issues...";
+  }
 
   publicResult(r) {
-    return { issueType: r.issueType, severity: r.severity, confidence: r.confidence, isCivicIssue: r.isCivicIssue };
+    return {
+      issueType: r.issueType,
+      severity: r.severity,
+      confidence: r.confidence,
+      isCivicIssue: r.isCivicIssue,
+    };
   }
 
   async execute({ img }) {
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: [{
-        role: "user",
-        parts: [
-          { inlineData: { mimeType: img.mimeType, data: img.data } },
-          { text: "Analyze this photo and classify the civic infrastructure issue." },
-        ],
-      }],
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: img.mimeType, data: img.data } },
+            { text: "Analyze this photo and classify the civic infrastructure issue." },
+          ],
+        },
+      ],
       config: {
         systemInstruction: SYSTEM,
         responseMimeType: "application/json",
@@ -56,8 +75,11 @@ class VisionAgent extends BaseAgent {
       },
     });
     let parsed;
-    try { parsed = JSON.parse(result.text); }
-    catch { throw new Error(`Vision Agent: unparseable Gemini output`); }
+    try {
+      parsed = JSON.parse(result.text);
+    } catch {
+      throw new Error(`Vision Agent: unparseable Gemini output`);
+    }
     return parsed;
   }
 }

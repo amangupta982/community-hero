@@ -6,10 +6,12 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org/reverse";
 const USER_AGENT = "CommunityHero/3.0 (civic-reporting-platform; contact@communityhero.app)";
 
 class GeoAgent extends BaseAgent {
-  constructor() { super("geo", { maxRetries: 1 }); }
+  constructor() {
+    super("geo", { maxRetries: 1 });
+  }
 
   startMessage({ lat, lng }) {
-    return lat != null
+    return lat !== null && lat !== undefined
       ? `Resolving location for GPS ${lat.toFixed(4)}, ${lng.toFixed(4)}...`
       : "No GPS coordinates — skipping geocoding.";
   }
@@ -21,7 +23,7 @@ class GeoAgent extends BaseAgent {
   }
 
   async execute({ lat, lng }) {
-    if (lat == null || lng == null) {
+    if (lat === null || lat === undefined || lng === null || lng === undefined) {
       return {
         available: false,
         reason: "No GPS coordinates provided",
@@ -49,11 +51,9 @@ class GeoAgent extends BaseAgent {
     const data = await res.json();
 
     const addr = data.address || {};
-    const city =
-      addr.city || addr.town || addr.village || addr.county || "Unknown";
-    const jurisdiction = city !== "Unknown"
-      ? `${city} Municipal Corporation`
-      : "General Grievance Cell";
+    const city = addr.city || addr.town || addr.village || addr.county || "Unknown";
+    const jurisdiction =
+      city !== "Unknown" ? `${city} Municipal Corporation` : "General Grievance Cell";
 
     return {
       available: true,

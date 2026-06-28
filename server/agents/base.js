@@ -16,7 +16,12 @@ export class BaseAgent {
       try {
         const result = await this.execute(input);
         const durationMs = Date.now() - start;
-        emit({ type: "agent_complete", agent: this.name, result: this.publicResult(result), durationMs });
+        emit({
+          type: "agent_complete",
+          agent: this.name,
+          result: this.publicResult(result),
+          durationMs,
+        });
         return result;
       } catch (err) {
         lastError = err;
@@ -39,7 +44,13 @@ export class BaseAgent {
   }
 
   // Override to provide a human-readable summary for the SSE event (avoid leaking raw data).
-  publicResult(result) { return result; }
-  startMessage(_input) { return `${this.name} running...`; }
-  async execute(_input) { throw new Error(`${this.name}: execute() not implemented`); }
+  publicResult(result) {
+    return result;
+  }
+  startMessage(_input) {
+    return `${this.name} running...`;
+  }
+  async execute(_input) {
+    throw new Error(`${this.name}: execute() not implemented`);
+  }
 }
