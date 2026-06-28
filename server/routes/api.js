@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { getReports, createReport } from "../controllers/reportController.js";
+import { getReports, getReport, createReport } from "../controllers/reportController.js";
 import { generateComplaint } from "../controllers/complaintController.js";
 import { streamReport } from "../controllers/streamController.js";
 import { getDashboardStats, getDashboardInsights } from "../controllers/dashboardController.js";
 import { seedDemo, resetDemo } from "../controllers/demoController.js";
+import { servePhoto } from "../controllers/photoController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { pipelineLimiter } from "../middleware/rateLimiter.js";
 import { validateReport } from "../middleware/validateReport.js";
@@ -24,7 +25,12 @@ router.get("/health", (_req, res) => {
   });
 });
 
+// GCS photo proxy — serves objects from Cloud Storage using server-side credentials.
+// Registered before param routes so Express doesn't treat "photo" as an :id.
+router.get("/photo/*", asyncHandler(servePhoto));
+
 router.get("/reports",            asyncHandler(getReports));
+router.get("/reports/:id",        asyncHandler(getReport));
 router.get("/dashboard/stats",    asyncHandler(getDashboardStats));
 router.get("/dashboard/insights", asyncHandler(getDashboardInsights));
 

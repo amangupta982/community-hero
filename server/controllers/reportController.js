@@ -1,9 +1,15 @@
 import { parseDataUrl } from "../utils/parseDataUrl.js";
 import { uploadPhoto } from "../services/storage.js";
-import { submitReport, listClusters } from "../store/clusters.js";
+import { submitReport, listClusters, findClusterById } from "../store/clusters.js";
 import { logActivity } from "../store/activity_logs.js";
 import { recordComplaint } from "../store/complaints.js";
 import { runAgentPipeline } from "../agents/pipeline.js";
+
+export async function getReport(req, res) {
+  const cluster = await findClusterById(req.params.id);
+  if (!cluster) return res.status(404).json({ error: "Report not found" });
+  res.json(cluster);
+}
 
 export async function getReports(req, res) {
   const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
