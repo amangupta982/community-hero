@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import reactPlugin from "eslint-plugin-react";
 
 export default [
   // ── Ignored paths ──────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ export default [
   // ── Client (React / Browser ESM) ──────────────────────────────────────────
   {
     files: ["client/src/**/*.{js,jsx}"],
+    plugins: { react: reactPlugin },
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",
@@ -53,6 +55,7 @@ export default [
       },
     },
     rules: {
+      "react/jsx-uses-vars": "error",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
