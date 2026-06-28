@@ -39,6 +39,7 @@ Set `GCS_BUCKET_NAME=YOUR_BUCKET_NAME` in `server/.env` (local) and via `--updat
 ## Photo URL Strategy: Local vs Cloud Run
 
 The bucket has **Public Access Prevention** enforced at the org level. This means:
+
 - `allUsers` IAM bindings are rejected (HTTP 412)
 - No object can be fetched without credentials
 - Public object URLs (`storage.googleapis.com/...`) do not work
@@ -61,6 +62,7 @@ Cons:  Firestore documents are larger; data URLs don't expire
 `K_SERVICE` is present → `IS_CLOUD_RUN = true`
 
 The function calls `file.getSignedUrl()` with V4 signing:
+
 - TTL: 7 days (`SIGNED_URL_TTL_MS`)
 - Signing method: workload identity (no key file needed)
 - `serviceAccountEmail` is passed if `SERVICE_ACCOUNT_EMAIL` is set — required for the IAM Credentials API to sign on behalf of the SA
@@ -76,9 +78,9 @@ Cons:  URLs expire after 7 days; requires iam.serviceAccountTokenCreator role
 
 The Cloud Run service account needs both:
 
-| Role | Purpose |
-|---|---|
-| `roles/storage.objectAdmin` | Upload, read, and delete objects |
+| Role                                   | Purpose                                      |
+| -------------------------------------- | -------------------------------------------- |
+| `roles/storage.objectAdmin`            | Upload, read, and delete objects             |
 | `roles/iam.serviceAccountTokenCreator` | Sign blobs for V4 signed URLs (self-signing) |
 
 Grant self-signing permission:
@@ -102,6 +104,7 @@ photos/{Date.now()}-{Math.random().toString(36).slice(2)}.{ext}
 Example: `photos/1719484800000-k7m3xqz.jpg`
 
 This guarantees:
+
 - No collisions (random suffix + millisecond timestamp)
 - Chronological sortability by prefix
 - MIME type expressed in extension (`jpg`, `png`, `webp`)

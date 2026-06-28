@@ -62,10 +62,10 @@ Returns the most recent civic issue clusters from Firestore, ordered by `created
 
 **Query Parameters**
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `limit` | integer | `50` | Number of results (max `100`) |
-| `after` | string | — | Cluster document ID for cursor pagination |
+| Parameter | Type    | Default | Description                               |
+| --------- | ------- | ------- | ----------------------------------------- |
+| `limit`   | integer | `50`    | Number of results (max `100`)             |
+| `after`   | string  | —       | Cluster document ID for cursor pagination |
 
 **Response `200 OK`**
 
@@ -146,11 +146,11 @@ Submits a photo through the full 7-agent pipeline and streams progress via Serve
 }
 ```
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `photo` | string | ✅ | Base64 data URL (`data:image/jpeg;base64,...`). Max ~12 MB. |
-| `lat` | number | Optional | Latitude (-90 to 90). Omit if location unavailable. |
-| `lng` | number | Optional | Longitude (-180 to 180). Omit if location unavailable. |
+| Field   | Type   | Required | Description                                                 |
+| ------- | ------ | -------- | ----------------------------------------------------------- |
+| `photo` | string | ✅       | Base64 data URL (`data:image/jpeg;base64,...`). Max ~12 MB. |
+| `lat`   | number | Optional | Latitude (-90 to 90). Omit if location unavailable.         |
+| `lng`   | number | Optional | Longitude (-180 to 180). Omit if location unavailable.      |
 
 **Response**
 
@@ -161,24 +161,24 @@ The server streams SSE events. See [SSE Event Reference](#sse-event-reference) f
 **Example (fetch + ReadableStream)**
 
 ```javascript
-const res = await fetch('/api/report/stream', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const res = await fetch("/api/report/stream", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ photo, lat, lng }),
 });
 
 const reader = res.body.getReader();
 const decoder = new TextDecoder();
-let buffer = '';
+let buffer = "";
 
 while (true) {
   const { done, value } = await reader.read();
   if (done) break;
   buffer += decoder.decode(value, { stream: true });
-  const lines = buffer.split('\n\n');
+  const lines = buffer.split("\n\n");
   buffer = lines.pop();
   for (const chunk of lines) {
-    const dataLine = chunk.split('\n').find(l => l.startsWith('data:'));
+    const dataLine = chunk.split("\n").find((l) => l.startsWith("data:"));
     if (dataLine) {
       const event = JSON.parse(dataLine.slice(5));
       console.log(event.type, event);
@@ -189,12 +189,12 @@ while (true) {
 
 **Error Responses**
 
-| Status | Error | Condition |
-|---|---|---|
-| `400` | `invalid_input` | Missing or malformed `photo` |
-| `413` | `image_too_large` | Photo exceeds 12 MB |
-| `400` | `invalid_input` | `lat` or `lng` out of range |
-| `429` | `rate_limited` | Exceeded 5 requests/min |
+| Status | Error             | Condition                    |
+| ------ | ----------------- | ---------------------------- |
+| `400`  | `invalid_input`   | Missing or malformed `photo` |
+| `413`  | `image_too_large` | Photo exceeds 12 MB          |
+| `400`  | `invalid_input`   | `lat` or `lng` out of range  |
+| `429`  | `rate_limited`    | Exceeded 5 requests/min      |
 
 ---
 
@@ -216,9 +216,9 @@ Re-runs Agent 6 (Complaint Agent) for an existing cluster and updates the Firest
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|---|---|---|
-| `id` | string | Cluster document ID from Firestore |
+| Parameter | Type   | Description                        |
+| --------- | ------ | ---------------------------------- |
+| `id`      | string | Cluster document ID from Firestore |
 
 **Response `200 OK`**
 
@@ -233,10 +233,10 @@ Re-runs Agent 6 (Complaint Agent) for an existing cluster and updates the Firest
 
 **Error Responses**
 
-| Status | Condition |
-|---|---|
-| `404` | Cluster not found |
-| `400` | Cluster is not a civic issue (`isCivicIssue: false`) |
+| Status | Condition                                            |
+| ------ | ---------------------------------------------------- |
+| `404`  | Cluster not found                                    |
+| `400`  | Cluster is not a civic issue (`isCivicIssue: false`) |
 
 ---
 
@@ -267,9 +267,7 @@ Returns aggregated statistics computed from all clusters. No caching — reads l
     { "date": "22 Jun", "count": 4, "critical": 1 },
     { "date": "23 Jun", "count": 7, "critical": 2 }
   ],
-  "byType": [
-    { "type": "Pothole", "count": 18, "avgPriority": 64 }
-  ],
+  "byType": [{ "type": "Pothole", "count": 18, "avgPriority": 64 }],
   "bySeverity": { "Critical": 5, "High": 12, "Medium": 18, "Low": 7 },
   "byStatus": { "Complaint Drafted": 38, "Reported": 4 },
   "wardRankings": [
@@ -345,9 +343,9 @@ Calls Gemini 2.5 Flash to generate city-intelligence insights based on current s
 
 **Error Responses**
 
-| Status | Condition |
-|---|---|
-| `503` | Gemini call failed and no stale cache available |
+| Status | Condition                                       |
+| ------ | ----------------------------------------------- |
+| `503`  | Gemini call failed and no stale cache available |
 
 ---
 
@@ -387,26 +385,27 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 
 ### Agent lifecycle events
 
-| `type` | Emitted by | Key fields |
-|---|---|---|
-| `agent_start` | `BaseAgent.run()` | `agent`, `message` |
+| `type`           | Emitted by        | Key fields                                       |
+| ---------------- | ----------------- | ------------------------------------------------ |
+| `agent_start`    | `BaseAgent.run()` | `agent`, `message`                               |
 | `agent_complete` | `BaseAgent.run()` | `agent`, `result` (public summary), `durationMs` |
-| `agent_retry` | `BaseAgent.run()` | `agent`, `attempt`, `maxRetries`, `error` |
-| `agent_error` | `BaseAgent.run()` | `agent`, `error` |
+| `agent_retry`    | `BaseAgent.run()` | `agent`, `attempt`, `maxRetries`, `error`        |
+| `agent_error`    | `BaseAgent.run()` | `agent`, `error`                                 |
 
 ### Pipeline-level events
 
-| `type` | Emitted by | Key fields |
-|---|---|---|
-| `pipeline_skipped` | `pipeline.js` | `reason`, `visionResult` (or `verificationResult`) |
-| `storage_start` | `streamController.js` | `message` |
-| `storage_complete` | `streamController.js` | `message` |
-| `pipeline_complete` | `streamController.js` | `cluster`, `merged`, `pipelineId` |
-| `pipeline_error` | `streamController.js` | `error` |
+| `type`              | Emitted by            | Key fields                                         |
+| ------------------- | --------------------- | -------------------------------------------------- |
+| `pipeline_skipped`  | `pipeline.js`         | `reason`, `visionResult` (or `verificationResult`) |
+| `storage_start`     | `streamController.js` | `message`                                          |
+| `storage_complete`  | `streamController.js` | `message`                                          |
+| `pipeline_complete` | `streamController.js` | `cluster`, `merged`, `pipelineId`                  |
+| `pipeline_error`    | `streamController.js` | `error`                                            |
 
 ### Agent `result` shapes (public summaries)
 
 **Vision / Verification**
+
 ```json
 {
   "issueType": "Pothole",
@@ -417,6 +416,7 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 ```
 
 **Geo**
+
 ```json
 {
   "available": true,
@@ -426,6 +426,7 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 ```
 
 **Context**
+
 ```json
 {
   "nearbyCount": 3,
@@ -436,6 +437,7 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 ```
 
 **Risk**
+
 ```json
 {
   "urgencyScore": 8,
@@ -445,6 +447,7 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 ```
 
 **Complaint**
+
 ```json
 {
   "department": "Roads & Infrastructure Department",
@@ -454,6 +457,7 @@ All events have a `type` string field. The `event:` SSE line matches `type`.
 ```
 
 **Monitoring**
+
 ```json
 {
   "pipelineId": "pipe_abc123",
@@ -475,11 +479,11 @@ All error responses follow the shape:
 }
 ```
 
-| HTTP Status | `error` | Meaning |
-|---|---|---|
-| `400` | `invalid_input` | Missing required field or invalid format |
-| `404` | `not_found` | Cluster document not found |
-| `413` | `image_too_large` | Photo data URL exceeds 12 MB |
-| `429` | `rate_limited` | Rate limit exceeded |
-| `500` | (varies) | Internal server error — check server logs |
-| `503` | (varies) | External dependency unavailable (Gemini, Firestore) |
+| HTTP Status | `error`           | Meaning                                             |
+| ----------- | ----------------- | --------------------------------------------------- |
+| `400`       | `invalid_input`   | Missing required field or invalid format            |
+| `404`       | `not_found`       | Cluster document not found                          |
+| `413`       | `image_too_large` | Photo data URL exceeds 12 MB                        |
+| `429`       | `rate_limited`    | Rate limit exceeded                                 |
+| `500`       | (varies)          | Internal server error — check server logs           |
+| `503`       | (varies)          | External dependency unavailable (Gemini, Firestore) |

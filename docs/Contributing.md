@@ -48,11 +48,13 @@ npx prettier --write .
 
 ### Linting
 
-**ESLint** is configured at the root (`eslint.config.js`):
+**ESLint** is configured at the root (`eslint.config.js`) with `eslint-plugin-react` for JSX variable tracking. CI runs with `--max-warnings 0` — **zero warnings allowed**.
 
 ```bash
-npx eslint .
+npm run lint           # same as: npx eslint .
 ```
+
+Key rules enforced on server code: `eqeqeq: ["error", "always"]`, `prefer-const`, `no-var`, `no-throw-literal`. Client code adds `react/jsx-uses-vars` to correctly track React component usage.
 
 ### EditorConfig
 
@@ -64,7 +66,7 @@ npx eslint .
 - **Async**: Use `async/await`. Avoid raw Promise chains.
 - **File extensions**: Always include `.js` in import paths (ESM requirement).
 - **Error handling**: All Express routes are wrapped with `asyncHandler`. Throw errors; don't swallow them.
-- **Comments**: Comment the *why*, not the *what*. Avoid redundant comments.
+- **Comments**: Comment the _why_, not the _what_. Avoid redundant comments.
 
 ---
 
@@ -76,9 +78,15 @@ npx eslint .
 import { BaseAgent } from "./base.js";
 
 class MyAgent extends BaseAgent {
-  constructor() { super("myagent"); }
-  startMessage() { return "Doing something useful..."; }
-  publicResult(r) { return { summary: r.key }; }
+  constructor() {
+    super("myagent");
+  }
+  startMessage() {
+    return "Doing something useful...";
+  }
+  publicResult(r) {
+    return { summary: r.key };
+  }
   async execute(input) {
     // ... your logic
     return result;
@@ -153,13 +161,14 @@ describe("myPureFunction", () => {
 
 Before opening a PR:
 
-- [ ] `npm run lint` passes with no errors
+- [ ] `npm run lint` passes with zero errors and zero warnings
+- [ ] `npm run format:check` passes (or run `npm run format` to auto-fix)
 - [ ] `npm run build --prefix client` succeeds
 - [ ] `npm test --prefix server` passes
 - [ ] New functionality is covered by tests
 - [ ] Relevant documentation in `docs/` is updated
 - [ ] No secrets or API keys in the diff
-- [ ] The PR description explains *why* the change is needed, not just *what* changed
+- [ ] The PR description explains _why_ the change is needed, not just _what_ changed
 
 ---
 
@@ -176,6 +185,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`
 
 Examples:
+
 ```
 feat(agents): add address validation to geo agent
 fix(store): handle missing lat/lng in listClusters pagination
@@ -188,6 +198,7 @@ test(clustering): add edge case for zero-distance points
 ## Reporting Bugs
 
 Use the [Bug Report template](../.github/ISSUE_TEMPLATE/bug_report.yml). Include:
+
 - Steps to reproduce
 - Expected vs actual behaviour
 - Server logs (remove any API keys before pasting)

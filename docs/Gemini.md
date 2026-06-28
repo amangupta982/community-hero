@@ -17,13 +17,13 @@ Get an API key at [aistudio.google.com](https://aistudio.google.com/).
 
 ## Agent Calls Summary
 
-| Agent | Model | Input | Output schema |
-|---|---|---|---|
-| Vision (Agent 1) | `gemini-2.5-flash` | Image + text prompt | `issueSchema` JSON |
-| Verification (Agent 2) | `gemini-2.5-flash` | Image + Agent 1 result | `verificationSchema` JSON |
-| Risk (Agent 5) | `gemini-2.5-flash` | Classification + context | `riskSchema` JSON |
-| Complaint (Agent 6) | `gemini-2.5-flash` | Full enrichment data | `complaintSchema` JSON |
-| Dashboard Insights | `gemini-2.5-flash` | Statistics snapshot | `insightsSchema` JSON |
+| Agent                  | Model              | Input                    | Output schema             |
+| ---------------------- | ------------------ | ------------------------ | ------------------------- |
+| Vision (Agent 1)       | `gemini-2.5-flash` | Image + text prompt      | `issueSchema` JSON        |
+| Verification (Agent 2) | `gemini-2.5-flash` | Image + Agent 1 result   | `verificationSchema` JSON |
+| Risk (Agent 5)         | `gemini-2.5-flash` | Classification + context | `riskSchema` JSON         |
+| Complaint (Agent 6)    | `gemini-2.5-flash` | Full enrichment data     | `complaintSchema` JSON    |
+| Dashboard Insights     | `gemini-2.5-flash` | Statistics snapshot      | `insightsSchema` JSON     |
 
 Agents 3 (Geo), 4 (Context), and 7 (Monitoring) do **not** call Gemini.
 
@@ -131,6 +131,7 @@ CITY SNAPSHOT (28 Jun 2026):
 ```
 
 The model returns:
+
 - **3 insights** (warning/info/success/critical with titles and metrics)
 - **2 predictions** (with confidence percentages and timeframes)
 - **3 city-wide action recommendations**
@@ -143,18 +144,20 @@ This response is cached in-memory per Cloud Run instance for **5 minutes** (`CAC
 
 **Gemini 2.5 Flash** pricing (as of June 2026 — verify current pricing at [ai.google.dev/pricing](https://ai.google.dev/pricing)):
 
-| Category | Rate |
-|---|---|
-| Input (text) | $0.075 / 1M tokens |
+| Category      | Rate               |
+| ------------- | ------------------ |
+| Input (text)  | $0.075 / 1M tokens |
 | Input (image) | $0.075 / 1M tokens |
-| Output (text) | $0.30 / 1M tokens |
+| Output (text) | $0.30 / 1M tokens  |
 
 **Per report submission (7 agents, 4 Gemini calls):**
+
 - Agents 1+2: two image+text calls (~800 input tokens + ~200 output tokens each)
 - Agents 5+6: two text-only calls (~1500 input + ~500 output tokens each)
 - Estimated cost: **< $0.01 per report** at current pricing
 
 **Dashboard insights (1 call, text-only):**
+
 - ~800 input + ~400 output tokens
 - Estimated cost: **< $0.001 per call**, cached for 5 minutes
 
@@ -165,6 +168,7 @@ This response is cached in-memory per Cloud Run instance for **5 minutes** (`CAC
 All agents catch Gemini errors and emit `agent_error` SSE events. The pipeline propagates the error to `streamController.js` which emits `pipeline_error` and closes the SSE stream.
 
 Common errors:
+
 - `GoogleGenerativeAIError: 429 RESOURCE_EXHAUSTED` — quota exceeded; retries help but may not resolve if the daily limit is hit
 - `SyntaxError: JSON.parse failed` — Gemini returned malformed JSON despite `responseMimeType: "application/json"`; extremely rare with 2.5 Flash; retries resolve it
 - `Error: fetch failed` — network connectivity issue; retries resolve transient failures
@@ -175,13 +179,13 @@ Common errors:
 
 All Gemini prompts and schemas are centralised:
 
-| File | Contents |
-|---|---|
-| `server/constants/index.js` | `issueSchema`, `SYSTEM_INSTRUCTION` (shared across agents) |
-| `server/agents/vision.js` | Vision-specific schema and system instruction |
-| `server/agents/verification.js` | Verification schema |
-| `server/agents/risk.js` | Risk scoring schema and prompt template |
-| `server/agents/complaint.js` | Complaint drafting prompt |
-| `server/controllers/dashboardController.js` | Insights prompt and schema |
+| File                                        | Contents                                                   |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `server/constants/index.js`                 | `issueSchema`, `SYSTEM_INSTRUCTION` (shared across agents) |
+| `server/agents/vision.js`                   | Vision-specific schema and system instruction              |
+| `server/agents/verification.js`             | Verification schema                                        |
+| `server/agents/risk.js`                     | Risk scoring schema and prompt template                    |
+| `server/agents/complaint.js`                | Complaint drafting prompt                                  |
+| `server/controllers/dashboardController.js` | Insights prompt and schema                                 |
 
 To update a prompt: edit the relevant file and redeploy. No database migrations required. Prompt changes affect all future pipeline runs immediately after deployment.

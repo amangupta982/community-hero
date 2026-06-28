@@ -75,6 +75,7 @@ gcloud storage buckets get-iam-policy gs://YOUR_BUCKET \
 ```
 
 Expected roles:
+
 - [ ] `roles/datastore.user` (project level)
 - [ ] `roles/storage.objectAdmin` (bucket level)
 - [ ] `roles/iam.serviceAccountTokenCreator` (SA self-policy)

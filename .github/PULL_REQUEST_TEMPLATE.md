@@ -15,9 +15,9 @@
 
 <!-- List the key changes. Be specific: which files, which functions, what was added/removed/changed. -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
@@ -28,8 +28,8 @@
 
 **Manual testing steps:**
 
-1. 
-2. 
+1.
+2.
 
 ## Related issues
 

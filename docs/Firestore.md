@@ -26,34 +26,34 @@ Primary collection. One document = one distinct civic issue at a location.
 
 **Key fields for querying**:
 
-| Field | Type | Indexed | Description |
-|---|---|---|---|
-| `issueType` | string | ✅ (composite) | Issue category |
-| `isCivicIssue` | boolean | ✅ (composite) | Filter for real civic issues |
-| `lat` | number | ✅ (composite, range) | Latitude for geo clustering |
-| `createdAt` | Timestamp | ✅ (auto) | Creation time — used for `orderBy` |
+| Field          | Type      | Indexed               | Description                        |
+| -------------- | --------- | --------------------- | ---------------------------------- |
+| `issueType`    | string    | ✅ (composite)        | Issue category                     |
+| `isCivicIssue` | boolean   | ✅ (composite)        | Filter for real civic issues       |
+| `lat`          | number    | ✅ (composite, range) | Latitude for geo clustering        |
+| `createdAt`    | Timestamp | ✅ (auto)             | Creation time — used for `orderBy` |
 
 ### `complaints`
 
 Audit log of all drafted complaint texts.
 
-| Field | Type | Description |
-|---|---|---|
-| `clusterId` | string | Reference to parent cluster |
-| `text` | string | Full complaint letter text |
-| `department` | string | Addressed department |
-| `createdAt` | Timestamp | When complaint was drafted |
+| Field        | Type      | Description                 |
+| ------------ | --------- | --------------------------- |
+| `clusterId`  | string    | Reference to parent cluster |
+| `text`       | string    | Full complaint letter text  |
+| `department` | string    | Addressed department        |
+| `createdAt`  | Timestamp | When complaint was drafted  |
 
 ### `activity_logs`
 
 Immutable append-only audit trail.
 
-| Field | Type | Description |
-|---|---|---|
-| `type` | string | Event type: `report_created`, `cluster_merged`, `complaint_drafted` |
-| `clusterId` | string | Related cluster ID |
-| `metadata` | object | Additional context (pipelineId, agentCount, etc.) |
-| `createdAt` | Timestamp | When the event occurred |
+| Field       | Type      | Description                                                         |
+| ----------- | --------- | ------------------------------------------------------------------- |
+| `type`      | string    | Event type: `report_created`, `cluster_merged`, `complaint_drafted` |
+| `clusterId` | string    | Related cluster ID                                                  |
+| `metadata`  | object    | Additional context (pipelineId, agentCount, etc.)                   |
+| `createdAt` | Timestamp | When the event occurred                                             |
 
 ### `users`
 
@@ -72,21 +72,22 @@ Two composite indexes are required for geo-clustering. Without them, the boundin
   "collectionGroup": "clusters",
   "queryScope": "COLLECTION",
   "fields": [
-    { "fieldPath": "issueType",    "order": "ASCENDING" },
+    { "fieldPath": "issueType", "order": "ASCENDING" },
     { "fieldPath": "isCivicIssue", "order": "ASCENDING" },
-    { "fieldPath": "lat",          "order": "ASCENDING" }
+    { "fieldPath": "lat", "order": "ASCENDING" }
   ]
 }
 ```
 
 **Query it enables:**
+
 ```javascript
 db.collection("clusters")
   .where("issueType", "==", analysis.issueType)
   .where("isCivicIssue", "==", true)
   .where("lat", ">=", lat - LAT_DELTA)
   .where("lat", "<=", lat + LAT_DELTA)
-  .orderBy("lat")
+  .orderBy("lat");
 ```
 
 ### Index 2 — Historical context query (Context Agent)
@@ -97,19 +98,20 @@ db.collection("clusters")
   "queryScope": "COLLECTION",
   "fields": [
     { "fieldPath": "issueType", "order": "ASCENDING" },
-    { "fieldPath": "lat",       "order": "ASCENDING" }
+    { "fieldPath": "lat", "order": "ASCENDING" }
   ]
 }
 ```
 
 **Query it enables** (inside `agents/context.js`):
+
 ```javascript
 db.collection("clusters")
   .where("issueType", "==", issueType)
   .where("lat", ">=", lat - LAT_DELTA)
   .where("lat", "<=", lat + LAT_DELTA)
   .orderBy("lat")
-  .limit(10)
+  .limit(10);
 ```
 
 ### Deploy indexes
@@ -172,7 +174,7 @@ Open the [Firestore Console](https://console.firebase.google.com/) → select yo
 import { Firestore } from "@google-cloud/firestore";
 const db = new Firestore({ projectId: "your-project-id" });
 const snap = await db.collection("clusters").orderBy("createdAt", "desc").limit(10).get();
-snap.docs.forEach(doc => console.log(doc.id, doc.data()));
+snap.docs.forEach((doc) => console.log(doc.id, doc.data()));
 ```
 
 ### Export / Backup

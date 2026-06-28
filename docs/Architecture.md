@@ -92,7 +92,7 @@ sequenceDiagram
     Pipeline->>Browser: SSE: agent_complete (monitoring)
 
     Express->>GCS: uploadPhoto() → signed URL
-    Browser<<-Express: SSE: storage_complete
+    Express-->>Browser: SSE: storage_complete
 
     Express->>FS: submitReport() (transaction)\ngeo-cluster or create
     FS-->>Express: {cluster, merged}
@@ -145,44 +145,44 @@ The primary document. One cluster = one distinct civic issue at a location. Mult
 ```typescript
 interface Cluster {
   // Classification
-  issueType:              "Pothole" | "Streetlight" | "Water Leakage" | "Garbage" | "Damaged Sidewalk" | "Other";
-  severity:               "Low" | "Medium" | "High" | "Critical";
-  description:            string;
-  confidence:             number;       // 0–100, from Gemini
-  isCivicIssue:           boolean;
-  rawObservations:        string[];     // from Vision Agent
+  issueType: "Pothole" | "Streetlight" | "Water Leakage" | "Garbage" | "Damaged Sidewalk" | "Other";
+  severity: "Low" | "Medium" | "High" | "Critical";
+  description: string;
+  confidence: number; // 0–100, from Gemini
+  isCivicIssue: boolean;
+  rawObservations: string[]; // from Vision Agent
   affectedInfrastructure: string | null;
 
   // Location
-  lat:  number | null;
-  lng:  number | null;
+  lat: number | null;
+  lng: number | null;
 
   // Lifecycle
-  status:       "Reported" | "Complaint Drafted" | "In Progress" | "Resolved";
-  reportCount:  number;                // incremented on each merge
+  status: "Reported" | "Complaint Drafted" | "In Progress" | "Resolved";
+  reportCount: number; // incremented on each merge
   statusHistory: Array<{
     status: string;
-    at:     string;                    // ISO timestamp
-    note:   string;
+    at: string; // ISO timestamp
+    note: string;
   }>;
 
   // Media
-  photo:  string;                      // primary photo URL (or base64 in dev)
-  photos: string[];                    // all photo URLs
+  photo: string; // primary photo URL (or base64 in dev)
+  photos: string[]; // all photo URLs
 
   // Complaint
-  complaint:        string | null;     // formal letter text
+  complaint: string | null; // formal letter text
   complaintSubject: string | null;
-  department:       string | null;     // recipient department
-  workOrder:        object | null;     // structured work order from Agent 6
-  citizenSummary:   string | null;     // plain-language summary for citizens
-  followUpDate:     string | null;     // ISO timestamp
+  department: string | null; // recipient department
+  workOrder: object | null; // structured work order from Agent 6
+  citizenSummary: string | null; // plain-language summary for citizens
+  followUpDate: string | null; // ISO timestamp
 
   // Enriched agent outputs (stored as sub-objects)
-  geoContext:     GeoResult | null;
-  contextResult:  ContextResult | null;
+  geoContext: GeoResult | null;
+  contextResult: ContextResult | null;
   riskAssessment: RiskResult | null;
-  pipelineTrace:  MonitoringResult | null;
+  pipelineTrace: MonitoringResult | null;
 
   // Timestamps
   createdAt: Timestamp;
@@ -207,6 +207,7 @@ Immutable append-only audit trail for every pipeline run, merge event, and compl
 3. **Transactional merge or create**: Firestore `runTransaction()` ensures read-before-write atomicity. Two simultaneous submissions for the same location cannot each create a new cluster.
 
 On merge:
+
 - `reportCount` is incremented
 - `severity` is escalated to the worse of the two
 - `photos` array is extended
@@ -216,16 +217,16 @@ On merge:
 
 ## Security Model
 
-| Layer | Control |
-|---|---|
-| HTTPS | Cloud Run enforces TLS; HTTP redirects to HTTPS |
-| Headers | `helmet` sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, etc. |
-| CORS | Disabled in production (`origin: false`); permissive only in development |
-| Rate limiting | Pipeline: 5 req/min per IP; API: 120 req/min per IP |
-| Input validation | `validateReport` middleware rejects malformed photos, invalid coordinates, oversized payloads (>12 MB) |
-| Secrets | `GEMINI_API_KEY` injected at Cloud Run runtime; never in image or client bundle |
-| Storage | Public Access Prevention enforced at org level; all photos require signed URLs |
-| IAM | Cloud Run SA has minimum required roles: `storage.objectAdmin`, `iam.serviceAccountTokenCreator`, `datastore.user` |
+| Layer            | Control                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| HTTPS            | Cloud Run enforces TLS; HTTP redirects to HTTPS                                                                    |
+| Headers          | `helmet` sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, etc.                                 |
+| CORS             | Disabled in production (`origin: false`); permissive only in development                                           |
+| Rate limiting    | Pipeline: 5 req/min per IP; API: 120 req/min per IP                                                                |
+| Input validation | `validateReport` middleware rejects malformed photos, invalid coordinates, oversized payloads (>12 MB)             |
+| Secrets          | `GEMINI_API_KEY` injected at Cloud Run runtime; never in image or client bundle                                    |
+| Storage          | Public Access Prevention enforced at org level; all photos require signed URLs                                     |
+| IAM              | Cloud Run SA has minimum required roles: `storage.objectAdmin`, `iam.serviceAccountTokenCreator`, `datastore.user` |
 
 ---
 

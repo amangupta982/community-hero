@@ -3,6 +3,7 @@
 ## Overview
 
 Community Hero deploys as a **single Cloud Run service**. One Docker container runs:
+
 - The Express API (`/api/*`)
 - The pre-built React SPA (all other routes)
 
@@ -41,13 +42,13 @@ Typical build time: **3–5 minutes**.
 
 Runtime environment variables are set via `--update-env-vars`. They persist across redeploys unless explicitly changed.
 
-| Variable | How to set |
-|---|---|
-| `GEMINI_API_KEY` | `--update-env-vars GEMINI_API_KEY=...` at deploy time |
-| `GOOGLE_CLOUD_PROJECT` | Set automatically by Cloud Run if using workload identity; or set explicitly |
-| `GCS_BUCKET_NAME` | `--update-env-vars GCS_BUCKET_NAME=...` |
-| `SERVICE_ACCOUNT_EMAIL` | `--update-env-vars SERVICE_ACCOUNT_EMAIL=...` (if using custom SA) |
-| `NODE_ENV` | Defaults to `production` from the Dockerfile `ENV` instruction |
+| Variable                | How to set                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`        | `--update-env-vars GEMINI_API_KEY=...` at deploy time                        |
+| `GOOGLE_CLOUD_PROJECT`  | Set automatically by Cloud Run if using workload identity; or set explicitly |
+| `GCS_BUCKET_NAME`       | `--update-env-vars GCS_BUCKET_NAME=...`                                      |
+| `SERVICE_ACCOUNT_EMAIL` | `--update-env-vars SERVICE_ACCOUNT_EMAIL=...` (if using custom SA)           |
+| `NODE_ENV`              | Defaults to `production` from the Dockerfile `ENV` instruction               |
 
 To update multiple variables at once:
 
@@ -113,10 +114,10 @@ Critical: `server/.env` is **never** uploaded to Cloud Build. `GEMINI_API_KEY` f
 
 Cloud Run runs under the **default Compute Engine service account** unless you specify `--service-account`. The SA needs:
 
-| Role | Purpose |
-|---|---|
-| `roles/datastore.user` | Firestore read/write |
-| `roles/storage.objectAdmin` | GCS photo upload + delete |
+| Role                                   | Purpose                                 |
+| -------------------------------------- | --------------------------------------- |
+| `roles/datastore.user`                 | Firestore read/write                    |
+| `roles/storage.objectAdmin`            | GCS photo upload + delete               |
 | `roles/iam.serviceAccountTokenCreator` | V4 signed URL generation (self-signing) |
 
 Grant them with:
@@ -208,12 +209,12 @@ Store `GEMINI_API_KEY` and `GCS_BUCKET_NAME` as GitHub Actions Secrets, never as
 
 All Google Cloud services used have free tiers. At small scale (< 1,000 reports/month):
 
-| Service | Estimated cost |
-|---|---|
-| Cloud Run | ~$0 (free tier: 2M req/month, 360,000 vCPU-seconds) |
-| Firestore | ~$0 (free tier: 1GB storage, 50K reads/day, 20K writes/day) |
-| Cloud Storage | ~$0 (free tier: 5GB) |
-| Gemini API | ~$0–$1 (2.5 Flash pricing; 7 calls per report) |
-| Cloud Build | ~$0 (free tier: 120 build-minutes/day) |
+| Service       | Estimated cost                                              |
+| ------------- | ----------------------------------------------------------- |
+| Cloud Run     | ~$0 (free tier: 2M req/month, 360,000 vCPU-seconds)         |
+| Firestore     | ~$0 (free tier: 1GB storage, 50K reads/day, 20K writes/day) |
+| Cloud Storage | ~$0 (free tier: 5GB)                                        |
+| Gemini API    | ~$0–$1 (2.5 Flash pricing; 7 calls per report)              |
+| Cloud Build   | ~$0 (free tier: 120 build-minutes/day)                      |
 
 At scale, the main cost driver is **Gemini API calls** (7 per report submission + 1 per dashboard insights refresh).

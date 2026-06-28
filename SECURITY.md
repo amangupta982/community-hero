@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported |
-|---|---|
-| Latest (`main`) | ✅ |
-| Previous releases | ❌ |
+| Version           | Supported |
+| ----------------- | --------- |
+| Latest (`main`)   | ✅        |
+| Previous releases | ❌        |
 
 We only provide security fixes for the current `main` branch. Update to the latest version before reporting.
 
@@ -18,6 +18,7 @@ Please report security issues by emailing:
 **amanmacair98@gmail.com**
 
 Include in your report:
+
 - A description of the vulnerability and its potential impact
 - Steps to reproduce or a proof-of-concept (if safe to include)
 - Affected component(s) (e.g., API endpoint, Gemini prompt injection, Firestore rules)
@@ -47,15 +48,15 @@ We aim to acknowledge reports within **48 hours** and provide a remediation plan
 
 ## Security Design
 
-| Control | Implementation |
-|---|---|
-| Secret management | `GEMINI_API_KEY` injected at Cloud Run runtime, never in the image or client bundle |
-| Input validation | `validateReport` middleware rejects malformed photos and out-of-range coordinates |
-| Rate limiting | 5 req/min for pipeline, 120 req/min for all API endpoints in production |
-| HTTP security headers | `helmet` middleware (minus CSP due to Google Maps cross-origin requirements) |
-| CORS | Disabled in production; permissive only in development |
-| Storage access | All photos require V4 signed URLs (7-day TTL); no public object access |
-| Firestore access | Server-side only (Admin SDK bypasses Firestore security rules); no client SDK |
+| Control               | Implementation                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Secret management     | `GEMINI_API_KEY` injected at Cloud Run runtime, never in the image or client bundle |
+| Input validation      | `validateReport` middleware rejects malformed photos and out-of-range coordinates   |
+| Rate limiting         | 5 req/min for pipeline, 120 req/min for all API endpoints in production             |
+| HTTP security headers | `helmet` middleware (minus CSP due to Google Maps cross-origin requirements)        |
+| CORS                  | Disabled in production; permissive only in development                              |
+| Storage access        | All photos require V4 signed URLs (7-day TTL); no public object access              |
+| Firestore access      | Server-side only (Admin SDK bypasses Firestore security rules); no client SDK       |
 
 ## Known Limitations
 
@@ -66,6 +67,7 @@ We aim to acknowledge reports within **48 hours** and provide a remediation plan
 ## Disclosure Policy
 
 We follow **coordinated disclosure**. We ask that you:
+
 1. Give us a reasonable time (minimum 7 days) to address the issue before public disclosure
 2. Make a good-faith effort to avoid data destruction, privacy violations, or service disruption during research
 3. Not disclose the issue publicly until we have released a fix

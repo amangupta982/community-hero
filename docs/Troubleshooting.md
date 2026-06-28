@@ -18,6 +18,7 @@ All `checks` fields should be `true`. A `false` value means the corresponding en
 **Cause:** The composite Firestore indexes have not been deployed, or the index was deleted.
 
 **Fix:**
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
@@ -31,6 +32,7 @@ Wait 1–10 minutes for the index to build. The server logs this error during th
 **Cause:** `firebase deploy --only firestore:indexes` completed, but the index is still being built by Firestore (can take up to 10 minutes).
 
 **Fix:** Wait. Check index status at:
+
 ```
 https://console.firebase.google.com/project/YOUR_PROJECT/firestore/indexes
 ```
@@ -42,6 +44,7 @@ https://console.firebase.google.com/project/YOUR_PROJECT/firestore/indexes
 **Cause:** `client/.env` is missing or `VITE_MAPS_KEY` is empty.
 
 **Fix (local dev):**
+
 ```bash
 echo "VITE_MAPS_KEY=AIza..." > client/.env
 npm run dev --prefix client
@@ -56,6 +59,7 @@ gcloud run deploy community-hero --source . --region asia-south1 ...
 ```
 
 **Verify `.gcloudignore`** does not exclude `client/.env`:
+
 ```bash
 grep "client/.env" .gcloudignore   # Should print: !client/.env
 ```
@@ -69,6 +73,7 @@ grep "client/.env" .gcloudignore   # Should print: !client/.env
 The `storage.js` service needs this to generate V4 signed URLs via workload identity.
 
 **Fix:**
+
 ```bash
 gcloud run services update community-hero \
   --region asia-south1 \
@@ -78,6 +83,7 @@ gcloud run services update community-hero \
 **Cause B:** The Cloud Run service account lacks `roles/iam.serviceAccountTokenCreator`.
 
 **Fix:**
+
 ```bash
 SA="PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 gcloud iam service-accounts add-iam-policy-binding "${SA}" \
@@ -120,14 +126,15 @@ The browser receives `{ type: "agent_error", agent: "vision", error: "..." }`. T
 
 Common causes:
 
-| Agent | Common errors |
-|---|---|
-| vision, verification | Gemini quota exhausted, network timeout, unparseable JSON response |
-| geo | Nominatim rate limit (1 req/sec) — BaseAgent retry resolves most cases |
-| context | Overpass timeout (free tier can be slow) — partial failures degrade gracefully |
-| risk, complaint | Same as vision |
+| Agent                | Common errors                                                                  |
+| -------------------- | ------------------------------------------------------------------------------ |
+| vision, verification | Gemini quota exhausted, network timeout, unparseable JSON response             |
+| geo                  | Nominatim rate limit (1 req/sec) — BaseAgent retry resolves most cases         |
+| context              | Overpass timeout (free tier can be slow) — partial failures degrade gracefully |
+| risk, complaint      | Same as vision                                                                 |
 
 Check server logs:
+
 ```bash
 gcloud logging read "resource.type=cloud_run_revision AND textPayload=~agent_error" \
   --project YOUR_PROJECT --limit 20 --format json
@@ -148,6 +155,7 @@ gcloud logging read "resource.type=cloud_run_revision AND textPayload=~agent_err
 ## `npm run dev` server starts but API calls fail (local)
 
 **Check 1:** Is the server actually running on `PORT=3001`?
+
 ```bash
 curl http://localhost:3001/api/health
 ```
@@ -155,11 +163,13 @@ curl http://localhost:3001/api/health
 **Check 2:** Does the Vite proxy match? `vite.config.js` should proxy `/api` to `http://localhost:3001`.
 
 **Check 3:** Is `server/.env` populated?
+
 ```bash
 cat server/.env | grep -v KEY   # Check non-secret vars
 ```
 
 **Check 4:** Are Google Cloud credentials available?
+
 ```bash
 gcloud auth application-default print-access-token
 ```
@@ -172,7 +182,7 @@ If this fails, run `gcloud auth application-default login`.
 
 The server uses **ES modules** (`"type": "module"` in `server/package.json`). All imports must use the full file extension (`.js`).
 
-**Wrong:**  `import { foo } from "./bar"`
+**Wrong:** `import { foo } from "./bar"`
 **Correct:** `import { foo } from "./bar.js"`
 
 If you add new modules, include the `.js` extension in all import paths.
@@ -194,6 +204,7 @@ Ensure the test runner config uses ESM. The project uses **Vitest** which handle
 **Cause A:** `client/.env` is missing locally, so `VITE_MAPS_KEY` is empty during `vite build`. The build succeeds but the map won't render.
 
 **Cause B:** npm install fails due to a version conflict. Check the Cloud Build logs:
+
 ```bash
 gcloud builds list --limit 5
 gcloud builds log BUILD_ID

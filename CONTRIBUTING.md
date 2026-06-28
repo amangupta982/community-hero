@@ -32,11 +32,12 @@ See the [local setup guide](README.md#local-setup) in the README for full detail
 
 1. Create a branch: `git checkout -b feat/your-feature-name`
 2. Make your changes
-3. Run linting: `npx eslint .`
+3. Run linting (zero warnings allowed): `npm run lint`
 4. Run tests: `npm test --prefix server`
-5. Verify the build: `npm run build --prefix client`
-6. Commit with a [Conventional Commit](https://www.conventionalcommits.org/) message
-7. Push and open a pull request against `main`
+5. Check formatting: `npm run format:check`
+6. Verify the build: `npm run build --prefix client`
+7. Commit with a [Conventional Commit](https://www.conventionalcommits.org/) message
+8. Push and open a pull request against `main`
 
 ## Pull Request Guidelines
 

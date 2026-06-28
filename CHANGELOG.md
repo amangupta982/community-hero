@@ -9,21 +9,32 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-- Professional documentation suite (`docs/` folder with Architecture, API, Deployment, Firestore, CloudStorage, Gemini, Troubleshooting, Contributing)
-- GitHub Actions CI workflow (lint → build → test)
-- Vitest unit test suite for server utilities and middleware
-- ESLint + Prettier + EditorConfig configuration
-- GitHub issue templates (Bug Report, Feature Request)
-- Pull request template
-- `PRODUCTION_CHECKLIST.md` for deployment verification
-- `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `LICENSE`
+---
+
+## [1.3.1] — 2026-06-28
+
+### Fixed
+
+- **ESLint CI**: Replaced all non-strict comparisons (`!=`, `==`) with strict equivalents (`!==`, `===`) in `server/agents/` and `server/services/` to satisfy `eqeqeq: ["error", "always"]` rule
+- **ESLint warnings**: Added `eslint-plugin-react` with `react/jsx-uses-vars` rule so JSX component references are correctly marked as used by `no-unused-vars`
+- **Unused variables**: Removed stale `import React` (not needed with React 17+ new JSX transform); removed destructured but unused props from `ReportCard`; changed `(r) => null` to `() => null` in `WorkflowProgress`; dropped `const data` in `useDemo.js`
+- **Mermaid diagram**: Fixed invalid `Browser<<-Express` arrow syntax in `docs/Architecture.md` — changed to `Express-->>Browser`
+
+### Changed
+
+- `MapView.jsx`: Replaced `const [showHeatmap, setShowHeatmap] = useState(false)` with `const showHeatmap = false` (setter was never called; heatmap toggle UI not implemented)
+
+### Documentation
+
+- Updated `README.md`: added 6 more GitHub badges (Firestore, Cloud Storage, ESLint, Vitest, ES Modules, Docker), new CI/CD section, Report Detail Page in screenshots table, expanded Project Structure with all files, `docs/images` guide
+- Updated `CHANGELOG.md` to reflect v1.3.1 cleanup release
 
 ---
 
 ## [1.3.0] — 2026-06-28
 
 ### Added
+
 - **Light-theme UI redesign**: Civic-modern design system with white cards, blue primary accent, and 3-column layout (sidebar + center + detail panel)
 - **`ReportDetail` component**: Right-side 4-tab detail panel (Overview / AI Analysis / Timeline / Documents) replacing inline card expansion
 - **`WorkflowProgress` component**: 7-step horizontal stepper derived from report status history
@@ -32,6 +43,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Detail panel de-congestion: status timeline + impact metrics rendered in a horizontal strip below main content
 
 ### Changed
+
 - `App.jsx`: Introduced `selectedReportId` state and `reports.find()` pattern so the detail panel always reflects fresh data
 - `Navbar.jsx`: SVG shield logo replacing emoji; full sidebar layout with Smart Tools section and community card
 - `ReportList.jsx`: Added `onSelect` prop and "Sorted by: Latest ▾" header
@@ -41,11 +53,13 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.2.0] — 2026-06-27
 
 ### Added
+
 - **Firestore composite indexes**: Deployed two composite indexes for geo-clustering and historical context queries
 - **Graceful index-build degradation**: Server catches `FAILED_PRECONDITION` (gRPC code 9) and skips geo-clustering while indexes build
 - `firebase.json` and `.firebaserc` for Firebase CLI deployment
 
 ### Fixed
+
 - `FAILED_PRECONDITION: The query requires an index` error on first deploy
 - `FAILED_PRECONDITION: That index is currently building` intermittent error
 
@@ -54,6 +68,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.1.0] — 2026-06-26
 
 ### Added
+
 - **7-agent AI pipeline** with Server-Sent Events streaming:
   - Agent 1: Vision (Gemini image classification)
   - Agent 2: Verification (second-opinion override)
@@ -73,6 +88,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Graceful SIGTERM shutdown for Cloud Run scale-down
 
 ### Changed
+
 - Photo upload now returns base64 data URL locally and V4 signed URL on Cloud Run
 - `submitReport()` upgraded to store full agent enrichment (geo, context, risk, complaint, monitoring)
 
@@ -81,6 +97,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.0.0] — 2026-06-24
 
 ### Added
+
 - Initial release
 - Express server with Firestore persistence
 - React + Vite client with Google Maps integration
@@ -91,8 +108,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Cursor-based Firestore pagination
 - Dark-theme premium UI
 
-[Unreleased]: https://github.com/YOUR_USERNAME/community-hero/compare/v1.3.0...HEAD
-[1.3.0]: https://github.com/YOUR_USERNAME/community-hero/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/YOUR_USERNAME/community-hero/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/YOUR_USERNAME/community-hero/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/YOUR_USERNAME/community-hero/releases/tag/v1.0.0
+[Unreleased]: https://github.com/amangupta982/community-hero/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/amangupta982/community-hero/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/amangupta982/community-hero/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/amangupta982/community-hero/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/amangupta982/community-hero/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/amangupta982/community-hero/releases/tag/v1.0.0
