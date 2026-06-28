@@ -1,8 +1,8 @@
 export default function SLAGauge({ compliance = 100, onTrack = 0, atRisk = 0, breached = 0 }) {
-  const r     = 38;
-  const circ  = 2 * Math.PI * r;
+  const r = 38;
+  const circ = 2 * Math.PI * r;
   const filled = circ * (compliance / 100);
-  const color  = compliance >= 80 ? "#047857" : compliance >= 60 ? "#f59e0b" : "#ef4444";
+  const color = compliance >= 80 ? "#047857" : compliance >= 60 ? "#f59e0b" : "#ef4444";
 
   return (
     <div className="sla-gauge-wrap">
@@ -14,7 +14,9 @@ export default function SLAGauge({ compliance = 100, onTrack = 0, atRisk = 0, br
       >
         <circle cx="48" cy="48" r={r} fill="none" stroke="var(--border)" strokeWidth="10" />
         <circle
-          cx="48" cy="48" r={r}
+          cx="48"
+          cy="48"
+          r={r}
           fill="none"
           stroke={color}
           strokeWidth="10"
@@ -24,7 +26,8 @@ export default function SLAGauge({ compliance = 100, onTrack = 0, atRisk = 0, br
           style={{ transition: "stroke-dasharray 0.9s ease" }}
         />
         <text
-          x="48" y="44"
+          x="48"
+          y="44"
           textAnchor="middle"
           fontSize="19"
           fontWeight="700"
@@ -33,7 +36,9 @@ export default function SLAGauge({ compliance = 100, onTrack = 0, atRisk = 0, br
         >
           {compliance}%
         </text>
-        <text x="48" y="60" textAnchor="middle" fontSize="9" fill="var(--muted)">SLA</text>
+        <text x="48" y="60" textAnchor="middle" fontSize="9" fill="var(--muted)">
+          SLA
+        </text>
       </svg>
 
       <div className="sla-legend">

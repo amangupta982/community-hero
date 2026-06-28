@@ -1,12 +1,14 @@
 import { useId } from "react";
 
 export default function TrendChart({ data = [], color = "#6366f1", criticalColor = "#ef4444" }) {
-  const uid   = useId();
+  const uid = useId();
   const gradId = `tg${uid.replace(/:/g, "")}`;
 
   if (!data.length) return <div className="trend-empty">No data yet</div>;
 
-  const W = 260, H = 72, P = 10;
+  const W = 260,
+    H = 72,
+    P = 10;
   const max = Math.max(...data.map((d) => d.count), 1);
 
   const pts = data.map((d, i) => {
@@ -16,15 +18,15 @@ export default function TrendChart({ data = [], color = "#6366f1", criticalColor
   });
 
   const polyline = pts.map(([x, y]) => `${x},${y}`).join(" ");
-  const area     = `${P},${H - P} ${polyline} ${W - P},${H - P}`;
+  const area = `${P},${H - P} ${polyline} ${W - P},${H - P}`;
 
   return (
     <div className="trend-chart-wrap">
       <svg viewBox={`0 0 ${W} ${H}`} className="trend-svg" aria-hidden="true">
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={color} stopOpacity="0.22" />
-            <stop offset="100%" stopColor={color} stopOpacity="0"    />
+            <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
         <polygon points={area} fill={`url(#${gradId})`} />
@@ -39,12 +41,17 @@ export default function TrendChart({ data = [], color = "#6366f1", criticalColor
         {pts.map(([x, y], i) => (
           <circle
             key={i}
-            cx={x} cy={y} r="4"
+            cx={x}
+            cy={y}
+            r="4"
             fill="white"
             stroke={data[i].critical > 0 ? criticalColor : color}
             strokeWidth="2.5"
           >
-            <title>{data[i].date}: {data[i].count} report{data[i].count !== 1 ? "s" : ""}{data[i].critical > 0 ? ` (${data[i].critical} critical)` : ""}</title>
+            <title>
+              {data[i].date}: {data[i].count} report{data[i].count !== 1 ? "s" : ""}
+              {data[i].critical > 0 ? ` (${data[i].critical} critical)` : ""}
+            </title>
           </circle>
         ))}
       </svg>

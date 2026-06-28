@@ -1,19 +1,25 @@
 import { useState } from "react";
 import { useDashboard } from "../../hooks/useDashboard.js";
-import CityView    from "./CityView.jsx";
-import AdminView   from "./AdminView.jsx";
+import CityView from "./CityView.jsx";
+import AdminView from "./AdminView.jsx";
 import OfficerView from "./OfficerView.jsx";
 import CitizenView from "./CitizenView.jsx";
 
 const ROLES = [
-  { id: "city",    label: "🏛️ City Official", desc: "Full city analytics"         },
-  { id: "admin",   label: "🗺️ Ward Admin",     desc: "Ward performance & SLA"      },
-  { id: "officer", label: "👮 Field Officer",  desc: "Assignments & urgent queue"   },
-  { id: "citizen", label: "🏙️ Citizen",        desc: "Community transparency view"  },
+  { id: "city", label: "🏛️ City Official", desc: "Full city analytics" },
+  { id: "admin", label: "🗺️ Ward Admin", desc: "Ward performance & SLA" },
+  { id: "officer", label: "👮 Field Officer", desc: "Assignments & urgent queue" },
+  { id: "citizen", label: "🏙️ Citizen", desc: "Community transparency view" },
 ];
 
 function LiveDot() {
-  return <span className="dash-live-dot" aria-label="Live data" title="Auto-refreshes every 20 seconds" />;
+  return (
+    <span
+      className="dash-live-dot"
+      aria-label="Live data"
+      title="Auto-refreshes every 20 seconds"
+    />
+  );
 }
 
 export default function DashboardShell({ onBack }) {
@@ -34,7 +40,9 @@ export default function DashboardShell({ onBack }) {
         <span className="dash-topbar-time">
           {lastUpdated
             ? `Updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-            : loading ? "Loading…" : ""}
+            : loading
+              ? "Loading…"
+              : ""}
         </span>
       </div>
 
@@ -66,8 +74,8 @@ export default function DashboardShell({ onBack }) {
             <div className="dash-error-icon">⚠️</div>
             <div className="dash-error-title">Could not load dashboard data</div>
             <div className="dash-error-body">
-              The server returned an error. This usually means the database is unreachable or
-              a Cloud Run IAM permission is missing.
+              The server returned an error. This usually means the database is unreachable or a
+              Cloud Run IAM permission is missing.
             </div>
             <button className="dash-retry-btn" onClick={refresh}>
               Retry
@@ -75,8 +83,8 @@ export default function DashboardShell({ onBack }) {
           </div>
         ) : (
           <div role="tabpanel">
-            {role === "city"    && <CityView    stats={stats} insights={insights} />}
-            {role === "admin"   && <AdminView   stats={stats} />}
+            {role === "city" && <CityView stats={stats} insights={insights} />}
+            {role === "admin" && <AdminView stats={stats} />}
             {role === "officer" && <OfficerView stats={stats} />}
             {role === "citizen" && <CitizenView stats={stats} />}
           </div>

@@ -1,12 +1,12 @@
 export default function BarChart({
-  items    = [],
+  items = [],
   labelKey = "ward",
   valueKey = "count",
   maxItems = 6,
-  color    = "#6366f1",
+  color = "#6366f1",
 }) {
   const visible = items.slice(0, maxItems);
-  const maxVal  = Math.max(...visible.map((item) => item[valueKey] ?? 0), 1);
+  const maxVal = Math.max(...visible.map((item) => item[valueKey] ?? 0), 1);
 
   return (
     <div className="bar-chart">
@@ -15,7 +15,9 @@ export default function BarChart({
         const pct = Math.max((val / maxVal) * 100, 2);
         return (
           <div key={i} className="bar-row">
-            <div className="bar-label" title={item[labelKey]}>{item[labelKey]}</div>
+            <div className="bar-label" title={item[labelKey]}>
+              {item[labelKey]}
+            </div>
             <div className="bar-track">
               <div
                 className="bar-fill"

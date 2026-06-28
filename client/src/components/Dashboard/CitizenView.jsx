@@ -1,20 +1,44 @@
-import StatCard   from "./StatCard.jsx";
+import StatCard from "./StatCard.jsx";
 import TrendChart from "./TrendChart.jsx";
 import { getIssueMeta } from "../../constants/index.js";
 
 const HOW_STEPS = [
-  { icon: "📸", title: "Snap a photo",  desc: "Take a photo of any issue on public property — road, footpath, streetlight, drain." },
-  { icon: "🔍", title: "Vision AI",     desc: "Gemini 2.5 identifies the issue type and severity from the photo in seconds." },
-  { icon: "📍", title: "Geo AI",        desc: "GPS + reverse geocoding pins the exact location on the city map." },
-  { icon: "🌐", title: "Context AI",    desc: "Checks nearby schools, hospitals, weather, and 60-day area history." },
-  { icon: "⚡", title: "Risk AI",       desc: "Scores public risk 0–100 and estimates urgency, cost, and repair time." },
-  { icon: "✉️", title: "Complaint AI",  desc: "Drafts an official letter to the right government department automatically." },
+  {
+    icon: "📸",
+    title: "Snap a photo",
+    desc: "Take a photo of any issue on public property — road, footpath, streetlight, drain.",
+  },
+  {
+    icon: "🔍",
+    title: "Vision AI",
+    desc: "Gemini 2.5 identifies the issue type and severity from the photo in seconds.",
+  },
+  {
+    icon: "📍",
+    title: "Geo AI",
+    desc: "GPS + reverse geocoding pins the exact location on the city map.",
+  },
+  {
+    icon: "🌐",
+    title: "Context AI",
+    desc: "Checks nearby schools, hospitals, weather, and 60-day area history.",
+  },
+  {
+    icon: "⚡",
+    title: "Risk AI",
+    desc: "Scores public risk 0–100 and estimates urgency, cost, and repair time.",
+  },
+  {
+    icon: "✉️",
+    title: "Complaint AI",
+    desc: "Drafts an official letter to the right government department automatically.",
+  },
 ];
 
 export default function CitizenView({ stats }) {
   const { overview, trend, byType } = stats;
   const todayCount = trend[trend.length - 1]?.count ?? 0;
-  const weekCount  = trend.reduce((s, d) => s + d.count, 0);
+  const weekCount = trend.reduce((s, d) => s + d.count, 0);
 
   return (
     <div className="dash-view">
@@ -30,10 +54,15 @@ export default function CitizenView({ stats }) {
       </div>
 
       <div className="dash-kpi-row">
-        <StatCard label="Active Issues"  value={overview.total}               icon="📍" accent="#6366f1" />
-        <StatCard label="Reported Today" value={todayCount}                   icon="📸" accent="#f59e0b" />
-        <StatCard label="This Week"      value={weekCount}                    icon="📅" accent="#7c3aed" />
-        <StatCard label="Citizens Heard" value={overview.totalCitizenReports} icon="👥" accent="#047857" />
+        <StatCard label="Active Issues" value={overview.total} icon="📍" accent="#6366f1" />
+        <StatCard label="Reported Today" value={todayCount} icon="📸" accent="#f59e0b" />
+        <StatCard label="This Week" value={weekCount} icon="📅" accent="#7c3aed" />
+        <StatCard
+          label="Citizens Heard"
+          value={overview.totalCitizenReports}
+          icon="👥"
+          accent="#047857"
+        />
       </div>
 
       <div className="dash-grid-2">
@@ -61,7 +90,7 @@ export default function CitizenView({ stats }) {
             ) : (
               byType.slice(0, 6).map((t, i) => {
                 const meta = getIssueMeta(t.type);
-                const pct  = Math.max((t.count / (byType[0]?.count || 1)) * 100, 3);
+                const pct = Math.max((t.count / (byType[0]?.count || 1)) * 100, 3);
                 return (
                   <div key={i} className="citizen-type-row">
                     <span
@@ -73,7 +102,11 @@ export default function CitizenView({ stats }) {
                     <div className="citizen-type-track">
                       <div
                         className="citizen-type-fill"
-                        style={{ width: `${pct}%`, background: meta.color, "--bar-delay": `${i * 55}ms` }}
+                        style={{
+                          width: `${pct}%`,
+                          background: meta.color,
+                          "--bar-delay": `${i * 55}ms`,
+                        }}
                       />
                     </div>
                     <span className="citizen-type-n">{t.count}</span>
