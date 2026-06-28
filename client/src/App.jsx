@@ -1,15 +1,15 @@
 import { useState, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useReports } from "./hooks/useReports.js";
-import { useDemo }    from "./hooks/useDemo.js";
-import Navbar           from "./components/Navbar.jsx";
-import ReportButton     from "./components/ReportButton.jsx";
-import DemoToggle       from "./components/DemoToggle.jsx";
-import MapView          from "./components/MapView.jsx";
-import ReportList       from "./components/ReportList.jsx";
+import { useDemo } from "./hooks/useDemo.js";
+import Navbar from "./components/Navbar.jsx";
+import ReportButton from "./components/ReportButton.jsx";
+import DemoToggle from "./components/DemoToggle.jsx";
+import MapView from "./components/MapView.jsx";
+import ReportList from "./components/ReportList.jsx";
 import PipelineProgress from "./components/PipelineProgress.jsx";
-import DashboardShell   from "./components/Dashboard/DashboardShell.jsx";
-import DemoPanel        from "./components/Demo/DemoPanel.jsx";
+import DashboardShell from "./components/Dashboard/DashboardShell.jsx";
+import DemoPanel from "./components/Demo/DemoPanel.jsx";
 import ReportDetailPage from "./pages/ReportDetailPage.jsx";
 
 export default function App() {
@@ -74,8 +74,10 @@ function MainView() {
     return <DashboardShell onBack={() => setView("app")} />;
   }
 
-  const today      = new Date().toDateString();
-  const todayCount = reports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === today).length;
+  const today = new Date().toDateString();
+  const todayCount = reports.filter(
+    (r) => r.createdAt && new Date(r.createdAt).toDateString() === today
+  ).length;
 
   return (
     <div className="app-shell">
@@ -102,24 +104,36 @@ function MainView() {
           )}
 
           <div className="top-header-actions">
-            <button className="nav-dashboard-btn" onClick={() => setView("dashboard")} aria-label="Open city intelligence dashboard">
+            <button
+              className="nav-dashboard-btn"
+              onClick={() => setView("dashboard")}
+              aria-label="Open city intelligence dashboard"
+            >
               <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden>
-                <rect x="1" y="10" width="5" height="9" rx="1" fill="currentColor"/>
-                <rect x="7.5" y="5" width="5" height="14" rx="1" fill="currentColor"/>
-                <rect x="14" y="1" width="5" height="18" rx="1" fill="currentColor"/>
+                <rect x="1" y="10" width="5" height="9" rx="1" fill="currentColor" />
+                <rect x="7.5" y="5" width="5" height="14" rx="1" fill="currentColor" />
+                <rect x="14" y="1" width="5" height="18" rx="1" fill="currentColor" />
               </svg>
               Dashboard
             </button>
             <button className="top-header-icon-btn" aria-label="Notifications">
               <svg width="16" height="16" viewBox="0 0 20 22" fill="none">
-                <path d="M10 1a6 6 0 0 1 6 6v4l2 4H2l2-4V7a6 6 0 0 1 6-6z" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M8 18a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.5"/>
+                <path
+                  d="M10 1a6 6 0 0 1 6 6v4l2 4H2l2-4V7a6 6 0 0 1 6-6z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+                <path d="M8 18a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </button>
           </div>
         </div>
 
-        {error && <div className="error" role="alert">{error}</div>}
+        {error && (
+          <div className="error" role="alert">
+            {error}
+          </div>
+        )}
 
         {/* ── Content area ── */}
         <div className="content-body">

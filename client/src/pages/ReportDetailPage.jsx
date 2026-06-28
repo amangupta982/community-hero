@@ -5,11 +5,11 @@ import { requestComplaint } from "../services/api.js";
 import ReportDetail from "../components/ReportDetail.jsx";
 
 export default function ReportDetailPage() {
-  const { reportId }  = useParams();
-  const navigate      = useNavigate();
-  const [report, setReport]       = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const { reportId } = useParams();
+  const navigate = useNavigate();
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [draftingId, setDraftingId] = useState(null);
 
   useEffect(() => {
@@ -17,9 +17,21 @@ export default function ReportDetailPage() {
     setLoading(true);
     setError(null);
     fetchReport(reportId)
-      .then((r) => { if (!cancelled) { setReport(r); setLoading(false); } })
-      .catch((e) => { if (!cancelled) { setError(e.message); setLoading(false); } });
-    return () => { cancelled = true; };
+      .then((r) => {
+        if (!cancelled) {
+          setReport(r);
+          setLoading(false);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e.message);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [reportId]);
 
   async function handleGenerateComplaint(id) {
@@ -41,17 +53,34 @@ export default function ReportDetailPage() {
       <header className="rdp-topbar">
         <button className="rdp-topbar-back" onClick={() => navigate(-1)}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d="M10 3L5 8l5 5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           Back
         </button>
 
         <div className="rdp-brand">
           <svg width="28" height="32" viewBox="0 0 40 46" fill="none" aria-hidden>
-            <path d="M20 1L2 9v14c0 10.5 7.7 20.3 18 22.4C30.3 43.3 38 33.5 38 23V9L20 1z"
-              fill="url(#rdp-shield-grad)" />
-            <text x="20" y="30" textAnchor="middle" fill="white" fontSize="14" fontWeight="800"
-              fontFamily="system-ui, sans-serif">CH</text>
+            <path
+              d="M20 1L2 9v14c0 10.5 7.7 20.3 18 22.4C30.3 43.3 38 33.5 38 23V9L20 1z"
+              fill="url(#rdp-shield-grad)"
+            />
+            <text
+              x="20"
+              y="30"
+              textAnchor="middle"
+              fill="white"
+              fontSize="14"
+              fontWeight="800"
+              fontFamily="system-ui, sans-serif"
+            >
+              CH
+            </text>
             <defs>
               <linearGradient id="rdp-shield-grad" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#60a5fa" />
@@ -63,7 +92,9 @@ export default function ReportDetailPage() {
         </div>
 
         <div className="rdp-topbar-crumb">
-          <span className="rdp-crumb-link" onClick={() => navigate("/")}>All Reports</span>
+          <span className="rdp-crumb-link" onClick={() => navigate("/")}>
+            All Reports
+          </span>
           <span className="rdp-crumb-sep">›</span>
           <span className="rdp-crumb-current">Report Details</span>
         </div>
