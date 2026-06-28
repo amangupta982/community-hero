@@ -1,9 +1,10 @@
-import { GoogleMap, useLoadScript, MarkerF, InfoWindowF } from "@react-google-maps/api";
+import { GoogleMap, useLoadScript, InfoWindowF } from "@react-google-maps/api";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { MAPS_KEY, DEFAULT_CENTER, SEVERITY_COLOR, getIssueMeta } from "../constants/index.js";
+import { MAPS_KEY, MAPS_MAP_ID, DEFAULT_CENTER, SEVERITY_COLOR, getIssueMeta } from "../constants/index.js";
 
+// "marker" library is required for AdvancedMarkerElement.
 // Stable reference — must not be recreated on every render.
-const MAPS_LIBRARIES = ["visualization"];
+const MAPS_LIBRARIES = ["visualization", "marker"];
 
 function riskColor(score) {
   if (!score) return null;
@@ -13,37 +14,72 @@ function riskColor(score) {
   return "#22c55e";
 }
 
+// Builds a circular HTML element that visually matches the old SymbolPath.CIRCLE style.
+function makeCircleContent(scale, color, opacity) {
+  const size = Math.round(scale * 2);
+  const el = document.createElement("div");
+  el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};border:2.5px solid #fff;box-sizing:border-box;cursor:pointer;`;
+  return el;
+}
+
 export default function MapView({ reports }) {
-  const [active, setActive]       = useState(null);
-  const [showHeatmap, setShowHeatmap] = useState(false);
-  const mapRef    = useRef(null);
+  const [active, setActive] = useState(null);
+  // mapReady gates imperative marker/heatmap effects until onLoad fires.
+  const [mapReady, setMapReady] = useState(false);
+  const showHeatmap = false;
+  const mapRef = useRef(null);
   const heatmapRef = useRef(null);
+  const markersRef = useRef([]);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: MAPS_KEY,
     libraries: MAPS_LIBRARIES,
   });
 
-  const reportsWithCoords = useMemo(
-    () => reports.filter((r) => r.lat && r.lng),
-    [reports]
-  );
+  const reportsWithCoords = useMemo(() => reports.filter((r) => r.lat && r.lng), [reports]);
 
-  // Auto-fit bounds whenever the set of plotted reports changes.
+  // Auto-fit bounds whenever the set of plotted reports changes or the map becomes ready.
   useEffect(() => {
     if (!mapRef.current || reportsWithCoords.length === 0) return;
     const bounds = new window.google.maps.LatLngBounds();
     reportsWithCoords.forEach((r) => bounds.extend({ lat: r.lat, lng: r.lng }));
     mapRef.current.fitBounds(bounds, 64);
     // Don't zoom to street level for a single pin.
-    const listener = window.google.maps.event.addListenerOnce(
-      mapRef.current, "idle",
-      () => {
-        if (mapRef.current.getZoom() > 15) mapRef.current.setZoom(15);
-      }
-    );
+    const listener = window.google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
+      if (mapRef.current.getZoom() > 15) mapRef.current.setZoom(15);
+    });
     return () => window.google.maps.event.removeListener(listener);
-  }, [reportsWithCoords]);
+  }, [reportsWithCoords, mapReady]);
+
+  // AdvancedMarkerElement instances — recreated whenever reports or heatmap toggle changes.
+  useEffect(() => {
+    if (!mapRef.current || !window.google?.maps?.marker?.AdvancedMarkerElement) return;
+
+    // Remove previous markers from the map.
+    markersRef.current.forEach((m) => { m.map = null; });
+    markersRef.current = [];
+
+    reportsWithCoords.forEach((r) => {
+      const scale = Math.max(8, 8 + Math.log2(r.reportCount || 1) * 2.5);
+      const color = SEVERITY_COLOR[r.severity] || "#3b82f6";
+      const opacity = showHeatmap ? 0.5 : 0.92;
+
+      const marker = new window.google.maps.marker.AdvancedMarkerElement({
+        map: mapRef.current,
+        position: { lat: r.lat, lng: r.lng },
+        content: makeCircleContent(scale, color, opacity),
+        title: r.issueType || "",
+      });
+
+      marker.addListener("click", () => setActive(r));
+      markersRef.current.push(marker);
+    });
+
+    return () => {
+      markersRef.current.forEach((m) => { m.map = null; });
+      markersRef.current = [];
+    };
+  }, [reportsWithCoords, showHeatmap, mapReady]);
 
   // Heatmap layer: create/destroy as toggled.
   useEffect(() => {
@@ -52,11 +88,15 @@ export default function MapView({ reports }) {
       heatmapRef.current.setMap(null);
       heatmapRef.current = null;
     }
-    if (!showHeatmap || !window.google?.maps?.visualization || reportsWithCoords.length === 0) return;
+    if (!showHeatmap || !window.google?.maps?.visualization || reportsWithCoords.length === 0)
+      return;
 
     const data = reportsWithCoords.map((r) => ({
       location: new window.google.maps.LatLng(r.lat, r.lng),
-      weight: Math.max(0.2, ((r.riskAssessment?.priorityScore ?? 40) / 100) * Math.sqrt(r.reportCount || 1)),
+      weight: Math.max(
+        0.2,
+        ((r.riskAssessment?.priorityScore ?? 40) / 100) * Math.sqrt(r.reportCount || 1)
+      ),
     }));
     heatmapRef.current = new window.google.maps.visualization.HeatmapLayer({
       data,
@@ -65,9 +105,12 @@ export default function MapView({ reports }) {
     });
     heatmapRef.current.setMap(mapRef.current);
     return () => {
-      if (heatmapRef.current) { heatmapRef.current.setMap(null); heatmapRef.current = null; }
+      if (heatmapRef.current) {
+        heatmapRef.current.setMap(null);
+        heatmapRef.current = null;
+      }
     };
-  }, [showHeatmap, reportsWithCoords]);
+  }, [showHeatmap, reportsWithCoords, mapReady]);
 
   if (!MAPS_KEY) {
     return (
@@ -77,7 +120,11 @@ export default function MapView({ reports }) {
     );
   }
   if (!isLoaded) {
-    return <div className="map placeholder"><span>Loading map…</span></div>;
+    return (
+      <div className="map placeholder">
+        <span>Loading map…</span>
+      </div>
+    );
   }
 
   // Always use DEFAULT_CENTER as the controlled `center` prop.
@@ -89,30 +136,22 @@ export default function MapView({ reports }) {
         mapContainerClassName="map"
         center={DEFAULT_CENTER}
         zoom={12}
-        onLoad={(m) => { mapRef.current = m; }}
+        onLoad={(m) => {
+          mapRef.current = m;
+          setMapReady(true);
+        }}
         options={{
-          streetViewControl:  false,
-          mapTypeControl:     false,
-          fullscreenControl:  false,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
           zoomControlOptions: { position: window.google.maps.ControlPosition.RIGHT_BOTTOM },
-          styles: MAP_STYLE,
+          // mapId is required by AdvancedMarkerElement. Note: mapId and the `styles` option
+          // are mutually exclusive — to restore the dark theme, attach a Cloud Map Style
+          // to the Map ID configured via VITE_MAPS_MAP_ID in .env.
+          mapId: MAPS_MAP_ID,
         }}
       >
-        {reportsWithCoords.map((r) => (
-          <MarkerF
-            key={r.id}
-            position={{ lat: r.lat, lng: r.lng }}
-            onClick={() => setActive(r)}
-            icon={{
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: Math.max(8, 8 + Math.log2(r.reportCount || 1) * 2.5),
-              fillColor:   SEVERITY_COLOR[r.severity] || "#3b82f6",
-              fillOpacity: showHeatmap ? 0.5 : 0.92,
-              strokeColor: "#fff",
-              strokeWeight: 2.5,
-            }}
-          />
-        ))}
+        {/* Markers are rendered imperatively via the useEffect above. */}
 
         {active && active.lat && (
           <InfoWindowF
@@ -129,22 +168,24 @@ export default function MapView({ reports }) {
                     </span>
                   );
                 })()}
-                <span
-                  className="iw-sev"
-                  style={{ color: SEVERITY_COLOR[active.severity] }}
-                >
+                <span className="iw-sev" style={{ color: SEVERITY_COLOR[active.severity] }}>
                   {active.severity}
                 </span>
               </div>
               <p className="iw-desc">{active.description}</p>
               {active.geoContext?.road && (
-                <div className="iw-row">📍 {active.geoContext.road}, {active.geoContext.suburb || active.geoContext.city}</div>
+                <div className="iw-row">
+                  📍 {active.geoContext.road}, {active.geoContext.suburb || active.geoContext.city}
+                </div>
               )}
               {active.reportCount > 1 && (
                 <div className="iw-row">👥 {active.reportCount} citizens reported</div>
               )}
               {active.riskAssessment?.priorityScore != null && (
-                <div className="iw-row" style={{ color: riskColor(active.riskAssessment.priorityScore) }}>
+                <div
+                  className="iw-row"
+                  style={{ color: riskColor(active.riskAssessment.priorityScore) }}
+                >
                   ⚡ Priority {active.riskAssessment.priorityScore}/100
                 </div>
               )}
@@ -180,20 +221,22 @@ export default function MapView({ reports }) {
   );
 }
 
-// Dark map style for premium dashboard look.
-const MAP_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6b6b80" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2a2a3e" }] },
-  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#252540" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1e1e36" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#5a5a70" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2e2e50" }] },
-  { featureType: "transit", elementType: "labels", stylers: [{ visibility: "simplified" }] },
-  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1e1e36" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e0e20" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4a4a60" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#16162a" }] },
-];
+// Kept for reference. Cannot be used alongside mapId (Google Maps API constraint).
+// To restore the dark theme, create a Map Style in Google Cloud Console, link it to
+// your Map ID, and set VITE_MAPS_MAP_ID in client/.env.
+// const MAP_STYLE = [
+//   { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
+//   { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
+//   { elementType: "labels.text.fill", stylers: [{ color: "#6b6b80" }] },
+//   { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2a2a3e" }] },
+//   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+//   { featureType: "road", elementType: "geometry", stylers: [{ color: "#252540" }] },
+//   { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1e1e36" }] },
+//   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#5a5a70" }] },
+//   { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2e2e50" }] },
+//   { featureType: "transit", elementType: "labels", stylers: [{ visibility: "simplified" }] },
+//   { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1e1e36" }] },
+//   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e0e20" }] },
+//   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4a4a60" }] },
+//   { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#16162a" }] },
+// ];
