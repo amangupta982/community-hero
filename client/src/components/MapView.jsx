@@ -1,6 +1,12 @@
 import { GoogleMap, useLoadScript, InfoWindowF } from "@react-google-maps/api";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { MAPS_KEY, MAPS_MAP_ID, DEFAULT_CENTER, SEVERITY_COLOR, getIssueMeta } from "../constants/index.js";
+import {
+  MAPS_KEY,
+  MAPS_MAP_ID,
+  DEFAULT_CENTER,
+  SEVERITY_COLOR,
+  getIssueMeta,
+} from "../constants/index.js";
 
 // "marker" library is required for AdvancedMarkerElement.
 // Stable reference — must not be recreated on every render.
@@ -19,6 +25,7 @@ function makeCircleContent(scale, color, opacity) {
   const size = Math.round(scale * 2);
   const el = document.createElement("div");
   el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};border:2.5px solid #fff;box-sizing:border-box;cursor:pointer;`;
+
   return el;
 }
 
@@ -56,7 +63,9 @@ export default function MapView({ reports }) {
     if (!mapRef.current || !window.google?.maps?.marker?.AdvancedMarkerElement) return;
 
     // Remove previous markers from the map.
-    markersRef.current.forEach((m) => { m.map = null; });
+    markersRef.current.forEach((m) => {
+      m.map = null;
+    });
     markersRef.current = [];
 
     reportsWithCoords.forEach((r) => {
@@ -76,7 +85,9 @@ export default function MapView({ reports }) {
     });
 
     return () => {
-      markersRef.current.forEach((m) => { m.map = null; });
+      markersRef.current.forEach((m) => {
+        m.map = null;
+      });
       markersRef.current = [];
     };
   }, [reportsWithCoords, showHeatmap, mapReady]);
