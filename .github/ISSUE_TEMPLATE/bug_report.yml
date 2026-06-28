@@ -1,0 +1,90 @@
+name: Bug Report
+description: Something is broken or not working as expected
+title: "fix: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the fields below to help us reproduce and fix the issue quickly.
+
+        **Before submitting:** search [existing issues](https://github.com/YOUR_USERNAME/community-hero/issues) to avoid duplicates.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Which part of the application is affected?
+      options:
+        - Photo submission / AI pipeline
+        - Report list / map view
+        - Report detail panel
+        - City Dashboard / AI Insights
+        - Demo mode
+        - Deployment / Cloud Run
+        - API endpoint
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: What is happening? What did you expect to happen instead?
+      placeholder: |
+        What I did: ...
+        What happened: ...
+        What I expected: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce the issue reliably.
+      placeholder: |
+        1. Open the app at ...
+        2. Click ...
+        3. Upload a photo of ...
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error messages
+      description: Paste any server logs, browser console errors, or SSE events. **Remove API keys before pasting.**
+      render: text
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local development
+        - Cloud Run (production)
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: "e.g. 20.15.0"
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (if frontend issue)
+      placeholder: "e.g. Chrome 126 / Safari 17 / Firefox 128"
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, screen recordings, or any other context that would help.

@@ -15,7 +15,7 @@ We only provide security fixes for the current `main` branch. Update to the late
 
 Please report security issues by emailing:
 
-**hashminer67@gmail.com**
+**amanmacair98@gmail.com**
 
 Include in your report:
 - A description of the vulnerability and its potential impact

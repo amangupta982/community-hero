@@ -1,0 +1,73 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Civic-tech improvements are always welcome.
+
+        **Before submitting:** check the [Future Improvements](https://github.com/YOUR_USERNAME/community-hero#future-improvements) section of the README and [existing issues](https://github.com/YOUR_USERNAME/community-hero/issues).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      options:
+        - AI pipeline (new agent or improved prompt)
+        - Report submission (camera, GPS, compression)
+        - Map / geo features
+        - City Dashboard
+        - Authentication / user accounts
+        - Multilingual support
+        - Municipal integrations (webhooks, portals)
+        - Performance / scalability
+        - Accessibility
+        - Developer experience (docs, tests, CI)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this feature solve? What is the civic use case?
+      placeholder: |
+        As a [citizen / officer / city administrator], I want to ...
+        so that I can ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you implement this? Be as specific as you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider? Why is your proposed solution better?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (your assessment)
+      options:
+        - Critical — blocks real municipal usage
+        - High — significantly improves the experience
+        - Medium — useful enhancement
+        - Low — nice to have
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Mockups, references to similar features in other civic-tech apps, relevant Indian municipal regulations, etc.
