@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IS_PROD   = process.env.NODE_ENV === "production";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ── Security headers ──────────────────────────────────────────────────────────
 // CSP and COEP disabled: Google Maps loads cross-origin scripts and workers
