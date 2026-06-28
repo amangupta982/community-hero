@@ -25,9 +25,5 @@ if (!GCS_BUCKET_NAME) {
 const storage = new Storage({ projectId: GOOGLE_CLOUD_PROJECT });
 export const bucket = GCS_BUCKET_NAME ? storage.bucket(GCS_BUCKET_NAME) : null;
 
-// Needed for V4 signed URL generation under Cloud Run workload identity.
-// Omit when using a service account key file (GOOGLE_APPLICATION_CREDENTIALS) locally.
-export const SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL || null;
-
 // ── Server ────────────────────────────────────────────────────────────────────
 export const PORT = process.env.PORT || 8080;
