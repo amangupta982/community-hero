@@ -25,8 +25,11 @@ export async function servePhoto(req, res) {
   res.setHeader("Content-Type", metadata.contentType || "image/jpeg");
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
 
-  file.createReadStream().on("error", (err) => {
-    if (!res.headersSent) res.status(500).json({ error: "Failed to stream photo." });
-    else res.destroy(err);
-  }).pipe(res);
+  file
+    .createReadStream()
+    .on("error", (err) => {
+      if (!res.headersSent) res.status(500).json({ error: "Failed to stream photo." });
+      else res.destroy(err);
+    })
+    .pipe(res);
 }

@@ -4,7 +4,7 @@ import { listAllClusters } from "../store/clusters.js";
 import { computeDashboardStats } from "../services/dashboardStats.js";
 
 // Per-instance in-memory cache (5-minute TTL).
-let insightsCache   = null;
+let insightsCache = null;
 let insightsCachedAt = 0;
 const CACHE_TTL = 5 * 60_000;
 
@@ -16,9 +16,9 @@ const INSIGHTS_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          type:   { type: Type.STRING, enum: ["warning", "info", "success", "critical"] },
-          title:  { type: Type.STRING },
-          body:   { type: Type.STRING },
+          type: { type: Type.STRING, enum: ["warning", "info", "success", "critical"] },
+          title: { type: Type.STRING },
+          body: { type: Type.STRING },
           metric: { type: Type.STRING },
         },
         required: ["type", "title", "body"],
@@ -29,10 +29,10 @@ const INSIGHTS_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          title:      { type: Type.STRING },
+          title: { type: Type.STRING },
           confidence: { type: Type.NUMBER },
-          timeframe:  { type: Type.STRING },
-          reason:     { type: Type.STRING },
+          timeframe: { type: Type.STRING },
+          reason: { type: Type.STRING },
         },
         required: ["title", "confidence", "timeframe", "reason"],
       },
@@ -58,18 +58,18 @@ async function generateInsights(stats) {
     return {
       insights: [
         {
-          type:   "info",
-          title:  "System ready — awaiting first reports",
-          body:   "No civic reports have been submitted yet. The AI pipeline will begin analysing issues as citizens submit photos.",
+          type: "info",
+          title: "System ready — awaiting first reports",
+          body: "No civic reports have been submitted yet. The AI pipeline will begin analysing issues as citizens submit photos.",
           metric: "0 reports",
         },
       ],
       predictions: [
         {
-          title:      "First citizen reports expected within hours of launch",
+          title: "First citizen reports expected within hours of launch",
           confidence: 85,
-          timeframe:  "24 hours",
-          reason:     "Typical engagement patterns after civic app launch in Indian cities.",
+          timeframe: "24 hours",
+          reason: "Typical engagement patterns after civic app launch in Indian cities.",
         },
       ],
       cityActions: [
@@ -80,9 +80,12 @@ async function generateInsights(stats) {
     };
   }
 
-  const topTypes  = stats.byType.slice(0, 5).map((t) => `${t.type} (${t.count})`).join(", ");
-  const topWard   = stats.wardRankings[0];
-  const trendStr  = stats.trend.map((d) => `${d.date}: ${d.count}`).join(", ");
+  const topTypes = stats.byType
+    .slice(0, 5)
+    .map((t) => `${t.type} (${t.count})`)
+    .join(", ");
+  const topWard = stats.wardRankings[0];
+  const trendStr = stats.trend.map((d) => `${d.date}: ${d.count}`).join(", ");
   const criticalPct = Math.round((stats.overview.critical / stats.overview.total) * 100);
 
   const prompt = `You are a City Intelligence AI for an Indian municipal corporation analysing real-time civic data.
@@ -110,20 +113,23 @@ Generate:
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
-      responseSchema:   INSIGHTS_SCHEMA,
+      responseSchema: INSIGHTS_SCHEMA,
       temperature: 0.7,
     },
   });
 
   let parsed;
-  try { parsed = JSON.parse(result.text); }
-  catch { throw new Error("Dashboard insights: unparseable Gemini output"); }
+  try {
+    parsed = JSON.parse(result.text);
+  } catch {
+    throw new Error("Dashboard insights: unparseable Gemini output");
+  }
   return parsed;
 }
 
 export async function getDashboardStats(req, res) {
   const clusters = await listAllClusters();
-  const stats    = computeDashboardStats(clusters);
+  const stats = computeDashboardStats(clusters);
   res.json(stats);
 }
 
@@ -133,11 +139,11 @@ export async function getDashboardInsights(req, res) {
   }
 
   const clusters = await listAllClusters();
-  const stats    = computeDashboardStats(clusters);
+  const stats = computeDashboardStats(clusters);
 
   try {
     const data = await generateInsights(stats);
-    insightsCache    = { ...data, generatedAt: new Date().toISOString(), fromCache: false };
+    insightsCache = { ...data, generatedAt: new Date().toISOString(), fromCache: false };
     insightsCachedAt = Date.now();
     res.json(insightsCache);
   } catch (err) {

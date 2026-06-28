@@ -45,7 +45,9 @@ export async function streamReport(req, res) {
 
   // Abort pipeline if client disconnects.
   let aborted = false;
-  req.on("close", () => { aborted = true; });
+  req.on("close", () => {
+    aborted = true;
+  });
 
   try {
     // ── Run all six agents ────────────────────────────────────────────────────
@@ -78,10 +80,10 @@ export async function streamReport(req, res) {
       lat: latNum,
       lng: lngNum,
       enriched: {
-        geoResult:        pipeline.geoResult,
-        contextResult:    pipeline.contextResult,
-        riskResult:       pipeline.riskResult,
-        complaintResult:  pipeline.complaintResult,
+        geoResult: pipeline.geoResult,
+        contextResult: pipeline.contextResult,
+        riskResult: pipeline.riskResult,
+        complaintResult: pipeline.complaintResult,
         monitoringResult: pipeline.monitoringResult,
       },
     });
@@ -100,7 +102,12 @@ export async function streamReport(req, res) {
       });
     }
 
-    emit({ type: "pipeline_complete", cluster, merged, pipelineId: pipeline.monitoringResult?.pipelineId });
+    emit({
+      type: "pipeline_complete",
+      cluster,
+      merged,
+      pipelineId: pipeline.monitoringResult?.pipelineId,
+    });
   } catch (err) {
     console.error("[stream] pipeline error:", err);
     emit({ type: "pipeline_error", error: err.message });

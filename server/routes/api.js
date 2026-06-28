@@ -14,13 +14,13 @@ const router = Router();
 // Lightweight synchronous health check for Cloud Run probes.
 router.get("/health", (_req, res) => {
   res.json({
-    ok:     true,
+    ok: true,
     uptime: Math.floor(process.uptime()),
     memory: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
     checks: {
-      gemini:    !!process.env.GEMINI_API_KEY,
+      gemini: !!process.env.GEMINI_API_KEY,
       firestore: !!process.env.GOOGLE_CLOUD_PROJECT,
-      storage:   !!process.env.GCS_BUCKET_NAME,
+      storage: !!process.env.GCS_BUCKET_NAME,
     },
   });
 });
@@ -29,9 +29,9 @@ router.get("/health", (_req, res) => {
 // Registered before param routes so Express doesn't treat "photo" as an :id.
 router.get("/photo/*", asyncHandler(servePhoto));
 
-router.get("/reports",            asyncHandler(getReports));
-router.get("/reports/:id",        asyncHandler(getReport));
-router.get("/dashboard/stats",    asyncHandler(getDashboardStats));
+router.get("/reports", asyncHandler(getReports));
+router.get("/reports/:id", asyncHandler(getReport));
+router.get("/dashboard/stats", asyncHandler(getDashboardStats));
 router.get("/dashboard/insights", asyncHandler(getDashboardInsights));
 
 // Multi-agent streaming endpoint (Server-Sent Events).
@@ -46,7 +46,7 @@ router.post("/report/:id/complaint", asyncHandler(generateComplaint));
 
 // Demo mode — seed realistic data / wipe it for a clean slate.
 // These routes are intentionally unprotected for hackathon demos.
-router.post("/demo/seed",  asyncHandler(seedDemo));
+router.post("/demo/seed", asyncHandler(seedDemo));
 router.post("/demo/reset", asyncHandler(resetDemo));
 
 export default router;

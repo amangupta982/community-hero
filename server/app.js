@@ -8,7 +8,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IS_PROD   = process.env.NODE_ENV === "production";
+const IS_PROD = process.env.NODE_ENV === "production";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -17,10 +17,12 @@ app.set("trust proxy", 1);
 // CSP and COEP disabled: Google Maps loads cross-origin scripts and workers
 // that would require an elaborate allowlist. Add in a future pass once Maps
 // keys are domain-locked and a Maps-compatible policy is tested end-to-end.
-app.use(helmet({
-  contentSecurityPolicy:    false,
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // In production Cloud Run serves both origins from the same host, so CORS is
 // unnecessary. Keep permissive in dev for the Vite dev server proxy.

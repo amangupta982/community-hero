@@ -20,13 +20,17 @@ export async function seedDemo(_req, res) {
     // Convert ISO string dates to Firestore Timestamps where cluster.js expects them.
     batch.set(ids[i], {
       ...cluster,
-      createdAt:  FieldValue.serverTimestamp(),
-      updatedAt:  FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   });
   await batch.commit();
 
-  res.json({ seeded: DEMO_CLUSTERS.length, existing: 0, message: `Seeded ${DEMO_CLUSTERS.length} demo clusters` });
+  res.json({
+    seeded: DEMO_CLUSTERS.length,
+    existing: 0,
+    message: `Seeded ${DEMO_CLUSTERS.length} demo clusters`,
+  });
 }
 
 export async function resetDemo(_req, res) {

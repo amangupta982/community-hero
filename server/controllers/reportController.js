@@ -51,10 +51,10 @@ export async function createReport(req, res) {
     lat: latNum,
     lng: lngNum,
     enriched: {
-      geoResult:        pipeline.geoResult,
-      contextResult:    pipeline.contextResult,
-      riskResult:       pipeline.riskResult,
-      complaintResult:  pipeline.complaintResult,
+      geoResult: pipeline.geoResult,
+      contextResult: pipeline.contextResult,
+      riskResult: pipeline.riskResult,
+      complaintResult: pipeline.complaintResult,
       monitoringResult: pipeline.monitoringResult,
     },
   });
