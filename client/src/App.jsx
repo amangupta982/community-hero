@@ -8,6 +8,7 @@ import DemoToggle from "./components/DemoToggle.jsx";
 import MapView from "./components/MapView.jsx";
 import ReportList from "./components/ReportList.jsx";
 import PipelineProgress from "./components/PipelineProgress.jsx";
+import InvalidImageState from "./components/InvalidImageState.jsx";
 import DashboardShell from "./components/Dashboard/DashboardShell.jsx";
 import DemoPanel from "./components/Demo/DemoPanel.jsx";
 import ReportDetailPage from "./pages/ReportDetailPage.jsx";
@@ -40,6 +41,8 @@ function MainView() {
     onGenerateComplaint,
     loadMore,
     dismissPipeline,
+    invalidImage,
+    dismissInvalidImage,
   } = useReports();
 
   const {
@@ -58,6 +61,12 @@ function MainView() {
 
   function handleFileChosen(file) {
     onPhotoChosen(file, { demoMode, getDemoCoords });
+  }
+
+  function handleUploadAnother() {
+    dismissInvalidImage();
+    // Programmatic click is inside a user-gesture (button click) so the browser allows it.
+    reportTriggerRef.current?.();
   }
 
   function handleDemoPipeline(spot) {
@@ -138,6 +147,13 @@ function MainView() {
         {/* ── Content area ── */}
         <div className="content-body">
           <div className="center-col">
+            {invalidImage && (
+              <InvalidImageState
+                onUploadAnother={handleUploadAnother}
+                onDashboard={() => setView("dashboard")}
+              />
+            )}
+
             {showPipeline && (
               <PipelineProgress steps={pipelineSteps} busy={busy} onDismiss={dismissPipeline} />
             )}

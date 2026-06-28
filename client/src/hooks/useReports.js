@@ -29,6 +29,7 @@ export function useReports() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mergedClusterId, setMergedClusterId] = useState(null); // drives merge animation
+  const [invalidImage, setInvalidImage] = useState(false);
 
   const cursorRef = useRef(null);
 
@@ -86,6 +87,7 @@ export function useReports() {
   async function onPhotoChosen(file, { demoMode, getDemoCoords }) {
     setError("");
     setBusy(true);
+    setInvalidImage(false);
     setPipelineSteps(initialSteps());
     setShowPipeline(true);
 
@@ -135,6 +137,7 @@ export function useReports() {
             updateStep(event.agent, { status: "error", error: event.error });
             break;
           case "pipeline_complete":
+            if (event.skipped) break; // non-civic image — nothing was written to Firestore
             // Highlight the cluster if it was merged from a duplicate detection.
             if (event.merged && event.cluster?.id) {
               setMergedClusterId(event.cluster.id);
@@ -142,10 +145,13 @@ export function useReports() {
             await loadReports({ replace: true });
             break;
           case "pipeline_skipped":
+            // The image was not a civic issue — stop pipeline display and show
+            // the invalid-image card. No Firestore write occurred so no reload needed.
             setPipelineSteps((prev) =>
               prev.map((s) => (s.status === "waiting" ? { ...s, status: "skipped" } : s))
             );
-            await loadReports({ replace: true });
+            setShowPipeline(false);
+            setInvalidImage(true);
             break;
           case "pipeline_error":
             setError(event.error || "Pipeline failed");
@@ -181,6 +187,10 @@ export function useReports() {
     setPipelineSteps(initialSteps());
   }
 
+  function dismissInvalidImage() {
+    setInvalidImage(false);
+  }
+
   return {
     reports,
     loading,
@@ -197,5 +207,7 @@ export function useReports() {
     onGenerateComplaint,
     loadMore,
     dismissPipeline,
+    invalidImage,
+    dismissInvalidImage,
   };
 }
