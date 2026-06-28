@@ -11,7 +11,7 @@ export async function uploadPhoto(base64DataUrl) {
   if (!parsed) throw new Error("Invalid base64 data URL passed to uploadPhoto.");
 
   const { mimeType, data } = parsed;
-  const ext        = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+  const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
   const objectName = `photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const file = bucket.file(objectName);

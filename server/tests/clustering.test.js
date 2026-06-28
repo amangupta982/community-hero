@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  haversineMetres,
-  isWithinClusterRadius,
-  worstSeverity,
-} from "../services/clustering.js";
+import { haversineMetres, isWithinClusterRadius, worstSeverity } from "../services/clustering.js";
 
 // ── haversineMetres ────────────────────────────────────────────────────────
 
@@ -35,7 +31,7 @@ describe("haversineMetres", () => {
 
   it("is symmetric (distance A→B equals B→A)", () => {
     const a = { lat: 12.9716, lng: 77.5946 };
-    const b = { lat: 12.9720, lng: 77.5950 };
+    const b = { lat: 12.972, lng: 77.595 };
     expect(haversineMetres(a, b)).toBeCloseTo(haversineMetres(b, a), 5);
   });
 
@@ -89,14 +85,14 @@ describe("isWithinClusterRadius", () => {
 
   it("returns true for two reports at the boundary (~49 m)", () => {
     // 0.00044° lat ≈ 49 m
-    const a = { lat: 12.97160, lng: 77.5946 };
+    const a = { lat: 12.9716, lng: 77.5946 };
     const b = { lat: 12.97204, lng: 77.5946 };
     expect(isWithinClusterRadius(a, b)).toBe(true);
   });
 
   it("returns false for two reports just outside the boundary (~51 m)", () => {
     // 0.00046° lat ≈ 51 m
-    const a = { lat: 12.97160, lng: 77.5946 };
+    const a = { lat: 12.9716, lng: 77.5946 };
     const b = { lat: 12.97206, lng: 77.5946 };
     expect(isWithinClusterRadius(a, b)).toBe(false);
   });

@@ -32,7 +32,7 @@ export async function analyzePhoto(img) {
 export async function draftComplaint(report) {
   const department = DEPARTMENT_BY_ISSUE[report.issueType] || "General Grievance Cell";
   const locationStr =
-    report.lat != null
+    report.lat !== null
       ? `GPS ${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`
       : "location attached in app";
   const count = report.reportCount || 1;

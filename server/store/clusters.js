@@ -71,7 +71,7 @@ export async function submitReport({ analysis, photoUrl, lat, lng, enriched = {}
   return db.runTransaction(async (tx) => {
     let candidateQuery;
 
-    if (lat != null && lng != null) {
+    if (lat !== null && lat !== undefined && lng !== null && lng !== undefined) {
       // Geo pre-filter: narrow the read set to the bounding box before Haversine.
       // Composite index required: (issueType ASC, isCivicIssue ASC, lat ASC)
       candidateQuery = COLL()
@@ -92,7 +92,7 @@ export async function submitReport({ analysis, photoUrl, lat, lng, enriched = {}
     let matchDoc = null;
     for (const doc of snap.docs) {
       const d = doc.data();
-      if (d.lat != null && d.lng != null) {
+      if (d.lat !== null && d.lat !== undefined && d.lng !== null && d.lng !== undefined) {
         if (isWithinClusterRadius({ lat, lng }, { lat: d.lat, lng: d.lng })) {
           matchDoc = doc;
           break;
@@ -114,19 +114,19 @@ export async function submitReport({ analysis, photoUrl, lat, lng, enriched = {}
         updatedAt: FieldValue.serverTimestamp(),
         // Re-run agents upgrade existing cluster's enrichment on merge.
         ...(contextResult && { contextResult }),
-        ...(riskResult    && { riskAssessment: riskResult }),
+        ...(riskResult && { riskAssessment: riskResult }),
         ...(complaintResult && {
-          complaint:        complaintResult.letter,
-          department:       complaintResult.department,
+          complaint: complaintResult.letter,
+          department: complaintResult.department,
           complaintSubject: complaintResult.subject,
-          workOrder:        complaintResult.workOrder   ?? null,
-          citizenSummary:   complaintResult.citizenSummary ?? null,
+          workOrder: complaintResult.workOrder ?? null,
+          citizenSummary: complaintResult.citizenSummary ?? null,
           followUpDate,
           status: "Complaint Drafted",
           statusHistory: FieldValue.arrayUnion({
             status: "Complaint Drafted",
-            at:     new Date().toISOString(),
-            note:   `Complaint re-filed to ${complaintResult.department}`,
+            at: new Date().toISOString(),
+            note: `Complaint re-filed to ${complaintResult.department}`,
           }),
         }),
       };
@@ -165,25 +165,33 @@ export async function submitReport({ analysis, photoUrl, lat, lng, enriched = {}
       status: complaintResult ? "Complaint Drafted" : "Reported",
       reportCount: 1,
       // Core complaint fields
-      complaint:        complaintResult?.letter   ?? null,
-      department:       complaintResult?.department ?? null,
-      complaintSubject: complaintResult?.subject  ?? null,
-      workOrder:        complaintResult?.workOrder ?? null,
-      citizenSummary:   complaintResult?.citizenSummary ?? null,
+      complaint: complaintResult?.letter ?? null,
+      department: complaintResult?.department ?? null,
+      complaintSubject: complaintResult?.subject ?? null,
+      workOrder: complaintResult?.workOrder ?? null,
+      citizenSummary: complaintResult?.citizenSummary ?? null,
       followUpDate: complaintResult?.followUpDays
         ? new Date(Date.now() + complaintResult.followUpDays * 86_400_000).toISOString()
         : null,
       statusHistory: [
-        { status: "Reported",          at: new Date().toISOString(), note: "7-agent AI pipeline completed" },
-        ...(complaintResult ? [{ status: "Complaint Drafted", at: new Date().toISOString(), note: `Formal complaint filed to ${complaintResult.department}` }] : []),
+        { status: "Reported", at: new Date().toISOString(), note: "7-agent AI pipeline completed" },
+        ...(complaintResult
+          ? [
+              {
+                status: "Complaint Drafted",
+                at: new Date().toISOString(),
+                note: `Formal complaint filed to ${complaintResult.department}`,
+              },
+            ]
+          : []),
       ],
       photo: photoUrl,
       photos: [photoUrl],
       // Enriched agent outputs stored as sub-objects
-      geoContext:     geoResult        ?? null,
-      contextResult:  contextResult    ?? null,
-      riskAssessment: riskResult       ?? null,
-      pipelineTrace:  monitoringResult ?? null,
+      geoContext: geoResult ?? null,
+      contextResult: contextResult ?? null,
+      riskAssessment: riskResult ?? null,
+      pipelineTrace: monitoringResult ?? null,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: null,
     };

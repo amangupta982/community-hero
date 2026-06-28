@@ -9,8 +9,14 @@ function makeRes() {
   return {
     _status: null,
     _json: null,
-    status(c) { this._status = c; return this; },
-    json(d) { this._json = d; return this; },
+    status(c) {
+      this._status = c;
+      return this;
+    },
+    json(d) {
+      this._json = d;
+      return this;
+    },
   };
 }
 
@@ -53,7 +59,9 @@ describe("asyncHandler", () => {
     // Promise.resolve() is called — the outer function throws synchronously.
     // next is NOT called; callers of asyncHandler(fn)() receive the throw.
     const error = new Error("sync error");
-    const fn = vi.fn().mockImplementation(() => { throw error; });
+    const fn = vi.fn().mockImplementation(() => {
+      throw error;
+    });
     const next = vi.fn();
 
     expect(() => asyncHandler(fn)(makeReq(), makeRes(), next)).toThrow("sync error");
@@ -71,7 +79,9 @@ describe("asyncHandler", () => {
 
   it("preserves the error message when forwarding to next", async () => {
     const message = "Gemini quota exceeded";
-    const fn = async () => { throw new Error(message); };
+    const fn = async () => {
+      throw new Error(message);
+    };
 
     const next = vi.fn();
     await asyncHandler(fn)(makeReq(), makeRes(), next);
