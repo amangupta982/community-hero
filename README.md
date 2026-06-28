@@ -91,13 +91,13 @@ A **City Intelligence Dashboard** aggregates live data for three roles — citiz
 
 > Screenshots should be placed in `docs/images/`. See the [images guide](#docsimages-guide) at the end of this file.
 
-| Main View                   | City Dashboard              | Report Detail                   |
-| --------------------------- | --------------------------- | ------------------------------- |
-| `docs/images/main-view.png` | `docs/images/dashboard.png` | `docs/images/report-detail.png` |
+| Main View                               | City Dashboard                               | Report Detail                                   |
+| --------------------------------------- | -------------------------------------------- | ----------------------------------------------- |
+| ![Main View](docs/images/main-view.png) | ![City Dashboard](docs/images/dashboard.png) | ![Report Detail](docs/images/report-detail.png) |
 
-| AI Pipeline Progress       | Map View                   | Demo Panel                   |
-| -------------------------- | -------------------------- | ---------------------------- |
-| `docs/images/pipeline.png` | `docs/images/map-view.png` | `docs/images/demo-panel.png` |
+| AI Pipeline Progress                              | Map View                              | Demo Panel                                |
+| ------------------------------------------------- | ------------------------------------- | ----------------------------------------- |
+| ![AI Pipeline Progress](docs/images/pipeline.png) | ![Map View](docs/images/map-view.png) | ![Demo Panel](docs/images/demo-panel.png) |
 
 ---
 
