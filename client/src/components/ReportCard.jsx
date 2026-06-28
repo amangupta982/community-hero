@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { SEVERITY_COLOR, getIssueMeta } from "../constants/index.js";
 
 function riskBadgeClass(score) {
@@ -14,7 +15,8 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export default function ReportCard({ report: r, draftingId, onGenerateComplaint, index = 0, isMerged = false, onSelect }) {
+export default function ReportCard({ report: r, draftingId, onGenerateComplaint, index = 0, isMerged = false }) {
+  const navigate      = useNavigate();
   const meta          = getIssueMeta(r.issueType);
   const hasRisk       = r.riskAssessment?.priorityScore != null;
   const geo           = r.geoContext?.available && r.geoContext;
@@ -69,7 +71,10 @@ export default function ReportCard({ report: r, draftingId, onGenerateComplaint,
         )}
 
         <div className="meta">
-          <span className="meta-conf">AI {Math.round(r.confidence ?? 0)}%</span>
+          {r.confidence != null && (() => {
+            const pct = Math.round(r.confidence <= 1 ? r.confidence * 100 : r.confidence);
+            return pct > 0 ? <span className="meta-conf">AI {pct}%</span> : null;
+          })()}
           {hasRisk && (
             <span className={`risk-badge ${riskBadgeClass(r.riskAssessment.priorityScore)}`}>
               ⚡ {r.riskAssessment.priorityScore}/100
@@ -80,11 +85,13 @@ export default function ReportCard({ report: r, draftingId, onGenerateComplaint,
         {/* Footer row */}
         <div className="card-footer">
           <span className="card-date">Reported {fmtDate(r.createdAt)}</span>
-          {onSelect && (
-            <button className="card-view-btn" onClick={() => onSelect(r.id)} aria-label="View report details">
-              View Details →
-            </button>
-          )}
+          <button
+            className="card-view-btn"
+            onClick={() => navigate(`/reports/${r.id}`)}
+            aria-label="View report details"
+          >
+            View Details →
+          </button>
         </div>
       </div>
     </article>

@@ -154,17 +154,13 @@ export default function MapView({ reports }) {
       </GoogleMap>
 
       <div className="map-controls">
-        <button
-          className={`map-ctrl-btn${showHeatmap ? " active" : ""}`}
-          onClick={() => setShowHeatmap((v) => !v)}
-          title={showHeatmap ? "Hide heatmap" : "Show risk heatmap"}
-        >
-          🔥 {showHeatmap ? "Hide" : "Heatmap"}
-        </button>
         {reportsWithCoords.length > 1 && (
           <button
+            type="button"
             className="map-ctrl-btn"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (!mapRef.current) return;
               const bounds = new window.google.maps.LatLngBounds();
               reportsWithCoords.forEach((r) => bounds.extend({ lat: r.lat, lng: r.lng }));

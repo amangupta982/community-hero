@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Routes, Route } from "react-router-dom";
 import { useReports } from "./hooks/useReports.js";
 import { useDemo }    from "./hooks/useDemo.js";
 import Navbar           from "./components/Navbar.jsx";
@@ -7,14 +8,21 @@ import DemoToggle       from "./components/DemoToggle.jsx";
 import MapView          from "./components/MapView.jsx";
 import ReportList       from "./components/ReportList.jsx";
 import PipelineProgress from "./components/PipelineProgress.jsx";
-import WorkflowProgress from "./components/WorkflowProgress.jsx";
-import ReportDetail     from "./components/ReportDetail.jsx";
 import DashboardShell   from "./components/Dashboard/DashboardShell.jsx";
 import DemoPanel        from "./components/Demo/DemoPanel.jsx";
+import ReportDetailPage from "./pages/ReportDetailPage.jsx";
 
 export default function App() {
+  return (
+    <Routes>
+      <Route path="/reports/:reportId" element={<ReportDetailPage />} />
+      <Route path="/*" element={<MainView />} />
+    </Routes>
+  );
+}
+
+function MainView() {
   const [view, setView] = useState("app");
-  const [selectedReportId, setSelectedReportId] = useState(null);
 
   const {
     reports,
@@ -69,11 +77,8 @@ export default function App() {
   const today      = new Date().toDateString();
   const todayCount = reports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === today).length;
 
-  const selectedReport = selectedReportId ? reports.find(r => r.id === selectedReportId) ?? null : null;
-  const workflowReport = selectedReport ?? reports[0] ?? null;
-
   return (
-    <div className={`app-shell${selectedReport ? " has-detail" : ""}`}>
+    <div className="app-shell">
       <Navbar reports={reports} onDashboard={() => setView("dashboard")} />
 
       <main className="main-content">
@@ -111,26 +116,17 @@ export default function App() {
                 <path d="M8 18a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.5"/>
               </svg>
             </button>
-            <button className="top-header-icon-btn" aria-label="Toggle theme">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M10 1v2M10 17v2M1 10h2M17 10h2M3.5 3.5l1.4 1.4M15.1 15.1l1.4 1.4M3.5 16.5l1.4-1.4M15.1 4.9l1.4-1.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
           </div>
         </div>
 
         {error && <div className="error" role="alert">{error}</div>}
 
-        {/* ── Content area (center + optional detail panel) ── */}
+        {/* ── Content area ── */}
         <div className="content-body">
           <div className="center-col">
-            {/* Workflow Progress OR Live Pipeline */}
-            {showPipeline ? (
+            {showPipeline && (
               <PipelineProgress steps={pipelineSteps} busy={busy} onDismiss={dismissPipeline} />
-            ) : workflowReport ? (
-              <WorkflowProgress report={workflowReport} />
-            ) : null}
+            )}
 
             {/* Map */}
             <section className="map-wrap" aria-label="Issue map">
@@ -147,19 +143,8 @@ export default function App() {
               loadingMore={loadingMore}
               onLoadMore={loadMore}
               mergedClusterId={mergedClusterId}
-              onSelect={setSelectedReportId}
             />
           </div>
-
-          {/* Detail panel */}
-          {selectedReport && (
-            <ReportDetail
-              report={selectedReport}
-              onClose={() => setSelectedReportId(null)}
-              onGenerateComplaint={onGenerateComplaint}
-              draftingId={draftingId}
-            />
-          )}
         </div>
       </main>
 

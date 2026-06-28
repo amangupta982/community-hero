@@ -1,7 +1,7 @@
 import ReportCard from "./ReportCard.jsx";
 import SkeletonCard from "./SkeletonCard.jsx";
 
-export default function ReportList({ reports, draftingId, onGenerateComplaint, loading, hasMore, loadingMore, onLoadMore, mergedClusterId, onSelect }) {
+export default function ReportList({ reports, draftingId, onGenerateComplaint, loading, hasMore, loadingMore, onLoadMore, mergedClusterId }) {
   return (
     <section className="list">
       <div className="list-header">
@@ -51,7 +51,6 @@ export default function ReportList({ reports, draftingId, onGenerateComplaint, l
                 draftingId={draftingId}
                 onGenerateComplaint={onGenerateComplaint}
                 isMerged={mergedClusterId === r.id}
-                onSelect={onSelect}
               />
             ))}
           </div>

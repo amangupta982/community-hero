@@ -1,3 +1,15 @@
+// Scrolls the .center-col container so `selector` appears at the top of it.
+// Falls back to scrollIntoView on mobile where center-col may not be the scroll root.
+function scrollInCol(selector) {
+  const target = document.querySelector(selector);
+  if (!target) return;
+  const col = document.querySelector(".center-col");
+  if (!col) { target.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  const colRect    = col.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  col.scrollTo({ top: col.scrollTop + (targetRect.top - colRect.top), behavior: "smooth" });
+}
+
 export default function Navbar({ reports, onDashboard }) {
   const critical = reports.filter((r) => r.severity === "Critical").length;
   const today    = new Date().toDateString();
@@ -37,14 +49,14 @@ export default function Navbar({ reports, onDashboard }) {
         </button>
         <button
           className="sidebar-nav-item"
-          onClick={() => document.querySelector(".map-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          onClick={() => scrollInCol(".map-wrap")}
         >
           <span className="sidebar-nav-icon" aria-hidden>🗺️</span>
           <span className="sidebar-nav-label">Map View</span>
         </button>
         <button
           className="sidebar-nav-item"
-          onClick={() => document.querySelector(".list")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          onClick={() => scrollInCol(".list")}
         >
           <span className="sidebar-nav-icon" aria-hidden>📋</span>
           <span className="sidebar-nav-label">My Reports</span>
@@ -62,7 +74,7 @@ export default function Navbar({ reports, onDashboard }) {
       {/* Smart Tools section */}
       <div className="sidebar-section-label">Smart Tools</div>
 
-      <div className="sidebar-ai-card">
+      <div className="sidebar-ai-card" onClick={onDashboard} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onDashboard()}>
         <div className="sidebar-ai-title">
           <span aria-hidden>🤖</span>
           AI Assistant
@@ -84,12 +96,44 @@ export default function Navbar({ reports, onDashboard }) {
         <span className="sidebar-community-emoji" aria-hidden>👷</span>
       </div>
 
-      {/* Footer */}
-      <div className="sidebar-footer">
-        <button className="sidebar-footer-btn">
-          <span aria-hidden>❓</span>
-          <span>Help & Support</span>
-        </button>
+      {/* Live impact stats */}
+      <div className="sidebar-section-label">Live Impact</div>
+      <div className="sidebar-stats-grid">
+        <div className="sidebar-stat-cell">
+          <span className="sidebar-stat-n">{reports.length}</span>
+          <span className="sidebar-stat-l">Reported</span>
+        </div>
+        <div className="sidebar-stat-cell">
+          <span className="sidebar-stat-n" style={critical > 0 ? { color: "#ef4444" } : {}}>
+            {critical}
+          </span>
+          <span className="sidebar-stat-l">Critical</span>
+        </div>
+        <div className="sidebar-stat-cell">
+          <span className="sidebar-stat-n">{todayCount}</span>
+          <span className="sidebar-stat-l">Today</span>
+        </div>
+      </div>
+
+      {/* Civic tips */}
+      <div className="sidebar-section-label">Tips</div>
+      <div className="sidebar-tips">
+        <div className="sidebar-tip">
+          <span aria-hidden>📸</span>
+          <span>Photograph issues in daylight for better AI accuracy</span>
+        </div>
+        <div className="sidebar-tip">
+          <span aria-hidden>📍</span>
+          <span>Enable GPS to auto-pin your report on the city map</span>
+        </div>
+        <div className="sidebar-tip">
+          <span aria-hidden>⚡</span>
+          <span>AI drafts an official complaint to the right dept in seconds</span>
+        </div>
+        <div className="sidebar-tip">
+          <span aria-hidden>🔀</span>
+          <span>Duplicate reports merge and escalate priority automatically</span>
+        </div>
       </div>
 
       {/* Hidden stats used by top header via reports prop */}

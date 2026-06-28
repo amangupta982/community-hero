@@ -18,7 +18,7 @@ function LiveDot() {
 
 export default function DashboardShell({ onBack }) {
   const [role, setRole] = useState("city");
-  const { stats, insights, loading, lastUpdated } = useDashboard();
+  const { stats, insights, loading, lastUpdated, refresh } = useDashboard();
 
   return (
     <div className="dash-shell">
@@ -29,12 +29,12 @@ export default function DashboardShell({ onBack }) {
         </button>
         <div className="dash-topbar-center">
           <span className="dash-topbar-title">City Intelligence Dashboard</span>
-          <LiveDot />
+          {stats && <LiveDot />}
         </div>
         <span className="dash-topbar-time">
           {lastUpdated
             ? `Updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-            : "Loading…"}
+            : loading ? "Loading…" : ""}
         </span>
       </div>
 
@@ -60,6 +60,18 @@ export default function DashboardShell({ onBack }) {
           <div className="dash-loading">
             <span className="dash-loading-spin">⟳</span>
             Loading city data…
+          </div>
+        ) : !stats ? (
+          <div className="dash-error-state">
+            <div className="dash-error-icon">⚠️</div>
+            <div className="dash-error-title">Could not load dashboard data</div>
+            <div className="dash-error-body">
+              The server returned an error. This usually means the database is unreachable or
+              a Cloud Run IAM permission is missing.
+            </div>
+            <button className="dash-retry-btn" onClick={refresh}>
+              Retry
+            </button>
           </div>
         ) : (
           <div role="tabpanel">
