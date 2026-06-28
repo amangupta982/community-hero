@@ -23,20 +23,8 @@ export default function InvalidImageState({ onUploadAnother, onDashboard }) {
           xmlns="http://www.w3.org/2000/svg"
         >
           <circle cx="20" cy="20" r="20" fill="rgba(217,119,6,0.10)" />
-          <path
-            d="M20 12v10M20 26.5v1"
-            stroke="#d97706"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-          <circle
-            cx="20"
-            cy="20"
-            r="11"
-            stroke="#d97706"
-            strokeWidth="2"
-            fill="none"
-          />
+          <path d="M20 12v10M20 26.5v1" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="20" cy="20" r="11" stroke="#d97706" strokeWidth="2" fill="none" />
         </svg>
       </div>
 
