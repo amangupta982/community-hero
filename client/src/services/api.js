@@ -1,4 +1,11 @@
 // qs — optional URLSearchParams query string, e.g. "limit=20&after=<id>"
+export async function fetchReport(id) {
+  const r = await fetch(`/api/reports/${id}`);
+  if (r.status === 404) throw new Error("Report not found");
+  if (!r.ok) throw new Error("Failed to load report");
+  return r.json();
+}
+
 export async function fetchReports(qs = "") {
   const url = qs ? `/api/reports?${qs}` : "/api/reports";
   const r = await fetch(url);
