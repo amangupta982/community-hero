@@ -89,15 +89,13 @@ A **City Intelligence Dashboard** aggregates live data for three roles — citiz
 
 ## Screenshots
 
-> Screenshots should be placed in `docs/images/`. See the [images guide](#docsimages-guide) at the end of this file.
-
 | Main View                               | City Dashboard                               | Report Detail                                   |
 | --------------------------------------- | -------------------------------------------- | ----------------------------------------------- |
 | ![Main View](docs/images/main-view.png) | ![City Dashboard](docs/images/dashboard.png) | ![Report Detail](docs/images/report-detail.png) |
 
-| AI Pipeline Progress                              | Map View                              | Demo Panel                                |
-| ------------------------------------------------- | ------------------------------------- | ----------------------------------------- |
-| ![AI Pipeline Progress](docs/images/pipeline.png) | ![Map View](docs/images/map-view.png) | ![Demo Panel](docs/images/demo-panel.png) |
+| AI Pipeline Progress                              | Map View                              |
+| ------------------------------------------------- | ------------------------------------- |
+| ![AI Pipeline Progress](docs/images/pipeline.png) | ![Map View](docs/images/map-view.png) |
 
 ---
 
@@ -562,7 +560,6 @@ Create a `docs/images/` directory and add screenshots of the app for the README 
 | `report-detail.png` | Report Detail Page — Overview tab showing AI analysis              |
 | `pipeline.png`      | Live pipeline progress during a photo submission                   |
 | `map-view.png`      | Map with multiple cluster markers                                  |
-| `demo-panel.png`    | Demo panel with seed/reset buttons                                 |
 
 To take screenshots: run the app locally (`npm run dev --prefix client`), navigate to each view, and capture with your OS screenshot tool or browser DevTools.
 
