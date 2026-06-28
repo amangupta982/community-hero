@@ -1,7 +1,16 @@
 import ReportCard from "./ReportCard.jsx";
 import SkeletonCard from "./SkeletonCard.jsx";
 
-export default function ReportList({ reports, draftingId, onGenerateComplaint, loading, hasMore, loadingMore, onLoadMore, mergedClusterId }) {
+export default function ReportList({
+  reports,
+  draftingId,
+  onGenerateComplaint,
+  loading,
+  hasMore,
+  loadingMore,
+  onLoadMore,
+  mergedClusterId,
+}) {
   return (
     <section className="list">
       <div className="list-header">
@@ -23,19 +32,26 @@ export default function ReportList({ reports, draftingId, onGenerateComplaint, l
 
       {!loading && reports.length === 0 && (
         <div className="empty-state">
-          <span className="empty-icon" aria-hidden>🏙️</span>
+          <span className="empty-icon" aria-hidden>
+            🏙️
+          </span>
           <p className="empty-title">No reports yet</p>
           <p className="empty-sub">
-            Photograph a civic issue — potholes, broken lights, garbage dumps.
-            The AI agent pipeline handles classification, risk scoring, and
-            complaint drafting automatically.
+            Photograph a civic issue — potholes, broken lights, garbage dumps. The AI agent pipeline
+            handles classification, risk scoring, and complaint drafting automatically.
           </p>
           <div className="empty-steps">
-            <div className="empty-step"><span>📷</span> Photo</div>
+            <div className="empty-step">
+              <span>📷</span> Photo
+            </div>
             <div className="empty-step-arrow">→</div>
-            <div className="empty-step"><span>🤖</span> 7 Agents</div>
+            <div className="empty-step">
+              <span>🤖</span> 7 Agents
+            </div>
             <div className="empty-step-arrow">→</div>
-            <div className="empty-step"><span>📨</span> Complaint</div>
+            <div className="empty-step">
+              <span>📨</span> Complaint
+            </div>
           </div>
         </div>
       )}
@@ -57,11 +73,7 @@ export default function ReportList({ reports, draftingId, onGenerateComplaint, l
 
           {hasMore && (
             <div className="load-more-wrap">
-              <button
-                className="load-more-btn"
-                onClick={onLoadMore}
-                disabled={loadingMore}
-              >
+              <button className="load-more-btn" onClick={onLoadMore} disabled={loadingMore}>
                 {loadingMore ? "⟳ Loading…" : "Load more reports"}
               </button>
             </div>

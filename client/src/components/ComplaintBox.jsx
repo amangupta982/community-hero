@@ -4,9 +4,9 @@ import { openComplaintPDF } from "../utils/pdf.js";
 
 const WORK_ORDER_PRIORITY_CLS = {
   "P1 - Emergency": "wo-p1",
-  "P2 - Urgent":    "wo-p2",
-  "P3 - Standard":  "wo-p3",
-  "P4 - Low":       "wo-p4",
+  "P2 - Urgent": "wo-p2",
+  "P3 - Standard": "wo-p3",
+  "P4 - Low": "wo-p4",
 };
 
 function ComplaintTab({ complaint }) {
@@ -31,7 +31,13 @@ function ComplaintTab({ complaint }) {
 
 function WorkOrderTab({ workOrder }) {
   if (!workOrder) {
-    return <div className="doc-tab-empty">Work order not available on this report.<br />Regenerate the complaint to produce one.</div>;
+    return (
+      <div className="doc-tab-empty">
+        Work order not available on this report.
+        <br />
+        Regenerate the complaint to produce one.
+      </div>
+    );
   }
   const priCls = WORK_ORDER_PRIORITY_CLS[workOrder.priority] ?? "wo-p3";
   return (
@@ -40,20 +46,22 @@ function WorkOrderTab({ workOrder }) {
         <span className={`wo-priority-badge ${priCls}`}>{workOrder.priority}</span>
         <span className="wo-title">{workOrder.title}</span>
       </div>
-      {workOrder.issueSummary && (
-        <p className="wo-summary">{workOrder.issueSummary}</p>
-      )}
+      {workOrder.issueSummary && <p className="wo-summary">{workOrder.issueSummary}</p>}
 
       <div className="wo-section-label">Repair Steps</div>
       <ol className="wo-steps">
-        {workOrder.steps?.map((step, i) => <li key={i}>{step}</li>)}
+        {workOrder.steps?.map((step, i) => (
+          <li key={i}>{step}</li>
+        ))}
       </ol>
 
       {workOrder.requiredResources?.length > 0 && (
         <>
           <div className="wo-section-label">Required Resources</div>
           <ul className="wo-list">
-            {workOrder.requiredResources.map((r, i) => <li key={i}>{r}</li>)}
+            {workOrder.requiredResources.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
           </ul>
         </>
       )}
@@ -62,7 +70,9 @@ function WorkOrderTab({ workOrder }) {
         <>
           <div className="wo-section-label wo-safety-label">⚠ Safety Precautions</div>
           <ul className="wo-list wo-safety-list">
-            {workOrder.safetyPrecautions.map((s, i) => <li key={i}>{s}</li>)}
+            {workOrder.safetyPrecautions.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
           </ul>
         </>
       )}
@@ -72,7 +82,11 @@ function WorkOrderTab({ workOrder }) {
 
 function CitizenTab({ citizenSummary, followUpDate }) {
   const followUpStr = followUpDate
-    ? new Date(followUpDate).toLocaleDateString("en-IN", { month: "long", day: "numeric", year: "numeric" })
+    ? new Date(followUpDate).toLocaleDateString("en-IN", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
     : null;
   return (
     <div className="doc-tab-pane citizen-pane">
@@ -80,7 +94,9 @@ function CitizenTab({ citizenSummary, followUpDate }) {
       {citizenSummary ? (
         <p className="citizen-summary-text">{citizenSummary}</p>
       ) : (
-        <p className="doc-tab-empty">Summary not available on this report. Regenerate the complaint to produce one.</p>
+        <p className="doc-tab-empty">
+          Summary not available on this report. Regenerate the complaint to produce one.
+        </p>
       )}
       {followUpStr && (
         <div className="citizen-followup">
@@ -112,22 +128,20 @@ function CitizenTab({ citizenSummary, followUpDate }) {
 const TABS = [
   { id: "complaint", label: "📄 Complaint" },
   { id: "workorder", label: "🔧 Work Order" },
-  { id: "summary",   label: "📱 For You"   },
+  { id: "summary", label: "📱 For You" },
 ];
 
 export default function ComplaintBox({ report }) {
-  const {
-    complaint, department, complaintSubject,
-    workOrder, citizenSummary, followUpDate,
-  } = report;
+  const { complaint, department, complaintSubject, workOrder, citizenSummary, followUpDate } =
+    report;
 
-  const [tab,      setTab]      = useState("complaint");
+  const [tab, setTab] = useState("complaint");
   const [expanded, setExpanded] = useState(false);
 
   const deptEmail = DEPARTMENT_EMAIL_MAP[department] ?? "";
 
   function openEmail() {
-    const sub  = encodeURIComponent(complaintSubject || `Civic Complaint: ${report.issueType}`);
+    const sub = encodeURIComponent(complaintSubject || `Civic Complaint: ${report.issueType}`);
     const body = encodeURIComponent(complaint || "");
     window.open(`mailto:${deptEmail}?subject=${sub}&body=${body}`, "_blank");
   }
@@ -172,7 +186,9 @@ export default function ComplaintBox({ report }) {
           <div role="tabpanel">
             {tab === "complaint" && <ComplaintTab complaint={complaint} />}
             {tab === "workorder" && <WorkOrderTab workOrder={workOrder} />}
-            {tab === "summary"   && <CitizenTab citizenSummary={citizenSummary} followUpDate={followUpDate} />}
+            {tab === "summary" && (
+              <CitizenTab citizenSummary={citizenSummary} followUpDate={followUpDate} />
+            )}
           </div>
 
           {/* Action bar */}

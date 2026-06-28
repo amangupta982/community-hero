@@ -9,20 +9,21 @@ function riskBadgeClass(score) {
   return "risk-low";
 }
 
-
 function fmtDate(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-export default function ReportCard({ report: r, draftingId, onGenerateComplaint, index = 0, isMerged = false }) {
-  const navigate      = useNavigate();
-  const meta          = getIssueMeta(r.issueType);
-  const hasRisk       = r.riskAssessment?.priorityScore != null;
-  const geo           = r.geoContext?.available && r.geoContext;
-  const locationLabel = geo
-    ? [geo.road, geo.suburb || geo.city].filter(Boolean).join(", ")
-    : null;
+export default function ReportCard({ report: r, index = 0, isMerged = false }) {
+  const navigate = useNavigate();
+  const meta = getIssueMeta(r.issueType);
+  const hasRisk = r.riskAssessment?.priorityScore != null;
+  const geo = r.geoContext?.available && r.geoContext;
+  const locationLabel = geo ? [geo.road, geo.suburb || geo.city].filter(Boolean).join(", ") : null;
 
   return (
     <article
@@ -39,9 +40,7 @@ export default function ReportCard({ report: r, draftingId, onGenerateComplaint,
       {/* Photo */}
       <div className="card-photo-wrap">
         <img src={r.photo} alt={r.issueType || "Issue photo"} loading="lazy" />
-        {r.reportCount > 1 && (
-          <span className="photo-count">{r.reportCount}</span>
-        )}
+        {r.reportCount > 1 && <span className="photo-count">{r.reportCount}</span>}
         <span
           className="photo-sev-bar"
           style={{ background: SEVERITY_COLOR[r.severity] }}
@@ -71,10 +70,11 @@ export default function ReportCard({ report: r, draftingId, onGenerateComplaint,
         )}
 
         <div className="meta">
-          {r.confidence != null && (() => {
-            const pct = Math.round(r.confidence <= 1 ? r.confidence * 100 : r.confidence);
-            return pct > 0 ? <span className="meta-conf">AI {pct}%</span> : null;
-          })()}
+          {r.confidence != null &&
+            (() => {
+              const pct = Math.round(r.confidence <= 1 ? r.confidence * 100 : r.confidence);
+              return pct > 0 ? <span className="meta-conf">AI {pct}%</span> : null;
+            })()}
           {hasRisk && (
             <span className={`risk-badge ${riskBadgeClass(r.riskAssessment.priorityScore)}`}>
               ⚡ {r.riskAssessment.priorityScore}/100
