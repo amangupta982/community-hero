@@ -3,9 +3,9 @@ import { DEMO_SCENARIOS } from "../../hooks/useDemo.js";
 
 // Status badge shown next to each scenario step.
 function StepStatus({ status }) {
-  if (status === "loading")  return <span className="dp-status dp-loading">⟳</span>;
-  if (status === "done")     return <span className="dp-status dp-done">✓</span>;
-  if (status === "error")    return <span className="dp-status dp-err">✕</span>;
+  if (status === "loading") return <span className="dp-status dp-loading">⟳</span>;
+  if (status === "done") return <span className="dp-status dp-done">✓</span>;
+  if (status === "error") return <span className="dp-status dp-err">✕</span>;
   return null;
 }
 
@@ -20,7 +20,7 @@ export default function DemoPanel({
   onClose,
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [hint, setHint]         = useState("");
+  const [hint, setHint] = useState("");
 
   function handleScenario(scenario) {
     switch (scenario.action) {
@@ -32,7 +32,9 @@ export default function DemoPanel({
         onPipeline(scenario.spot);
         break;
       case "duplicate":
-        setHint("📷 File picker is open — submit any photo 12 m from the seeded pothole to trigger duplicate detection.");
+        setHint(
+          "📷 File picker is open — submit any photo 12 m from the seeded pothole to trigger duplicate detection."
+        );
         onDuplicate(scenario.spot);
         break;
       case "dashboard":
@@ -48,20 +50,25 @@ export default function DemoPanel({
   }
 
   function buttonLabel(scenario) {
-    if (scenario.action === "seed")  return seedStatus === "loading" ? "Seeding…" : seedStatus === "done" ? "Re-seed" : "▶ Run";
+    if (scenario.action === "seed")
+      return seedStatus === "loading" ? "Seeding…" : seedStatus === "done" ? "Re-seed" : "▶ Run";
     if (scenario.action === "reset") return resetStatus === "loading" ? "Resetting…" : "↺ Reset";
     if (scenario.action === "dashboard") return "Open →";
     return "▶ Run";
   }
 
   function stepStatus(scenario) {
-    if (scenario.action === "seed")  return seedStatus;
+    if (scenario.action === "seed") return seedStatus;
     if (scenario.action === "reset") return resetStatus;
     return "idle";
   }
 
   return (
-    <div className={`demo-panel${expanded ? " dp-expanded" : ""}`} role="complementary" aria-label="Demo playbook">
+    <div
+      className={`demo-panel${expanded ? " dp-expanded" : ""}`}
+      role="complementary"
+      aria-label="Demo playbook"
+    >
       {/* Header */}
       <div className="dp-head">
         <div className="dp-head-left">
@@ -77,7 +84,12 @@ export default function DemoPanel({
           >
             {expanded ? "▼" : "▲"}
           </button>
-          <button className="dp-close-btn" onClick={onClose} title="Exit demo mode" aria-label="Exit demo mode">
+          <button
+            className="dp-close-btn"
+            onClick={onClose}
+            title="Exit demo mode"
+            aria-label="Exit demo mode"
+          >
             ✕
           </button>
         </div>
@@ -106,7 +118,7 @@ export default function DemoPanel({
                   style={{ "--s-color": s.color }}
                   onClick={() => handleScenario(s)}
                   disabled={
-                    (s.action === "seed"  && seedStatus  === "loading") ||
+                    (s.action === "seed" && seedStatus === "loading") ||
                     (s.action === "reset" && resetStatus === "loading")
                   }
                 >
@@ -120,7 +132,13 @@ export default function DemoPanel({
           {hint && (
             <div className="dp-hint">
               {hint}
-              <button className="dp-hint-dismiss" onClick={() => setHint("")} aria-label="Dismiss hint">✕</button>
+              <button
+                className="dp-hint-dismiss"
+                onClick={() => setHint("")}
+                aria-label="Dismiss hint"
+              >
+                ✕
+              </button>
             </div>
           )}
 
