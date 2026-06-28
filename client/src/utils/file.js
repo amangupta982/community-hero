@@ -9,19 +9,22 @@ async function compressImage(file, maxDim = 1280, quality = 0.82) {
     img.onload = () => {
       URL.revokeObjectURL(url);
       const { width, height } = img;
-      const scale  = Math.min(1, maxDim / Math.max(width, height));
-      const w      = Math.round(width  * scale);
-      const h      = Math.round(height * scale);
+      const scale = Math.min(1, maxDim / Math.max(width, height));
+      const w = Math.round(width * scale);
+      const h = Math.round(height * scale);
       const canvas = document.createElement("canvas");
-      canvas.width  = w;
+      canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const dataUrl  = canvas.toDataURL("image/jpeg", quality);
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
       const [meta, data] = dataUrl.split(",");
       const mimeType = meta.replace("data:", "").replace(";base64", "");
       resolve({ data, mimeType });
     };
-    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
     img.src = url;
   });
 }
@@ -34,7 +37,7 @@ export async function fileToDataUrl(file) {
     // Canvas unavailable — fall back to raw encoding.
     return new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.onload  = () => resolve(r.result);
+      r.onload = () => resolve(r.result);
       r.onerror = reject;
       r.readAsDataURL(file);
     });
@@ -48,13 +51,13 @@ export function getLocation() {
       return resolve({ coords: null, reason: "unsupported" });
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({
-        coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-        reason: null,
-      }),
+      (pos) =>
+        resolve({
+          coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          reason: null,
+        }),
       (err) => {
-        const reason =
-          err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
+        const reason = err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
         resolve({ coords: null, reason });
       },
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 }

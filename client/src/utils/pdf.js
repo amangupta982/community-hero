@@ -1,6 +1,15 @@
 function fmtDate(iso) {
-  if (!iso) return new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
-  return new Date(iso).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
+  if (!iso)
+    return new Date().toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  return new Date(iso).toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function fmtINR(n) {
@@ -11,33 +20,42 @@ function fmtINR(n) {
 }
 
 function sevColor(sev) {
-  return sev === "Critical" ? "#ef4444"
-       : sev === "High"     ? "#f97316"
-       : sev === "Medium"   ? "#f59e0b"
-       : "#3b82f6";
+  return sev === "Critical"
+    ? "#ef4444"
+    : sev === "High"
+      ? "#f97316"
+      : sev === "Medium"
+        ? "#f59e0b"
+        : "#3b82f6";
 }
 
 function sevBg(sev) {
-  return sev === "Critical" ? "#fef2f2"
-       : sev === "High"     ? "#fff7ed"
-       : "#fffbeb";
+  return sev === "Critical" ? "#fef2f2" : sev === "High" ? "#fff7ed" : "#fffbeb";
 }
 
 export function openComplaintPDF(report) {
   const {
-    id, issueType, severity, complaint, department,
-    riskAssessment: risk, geoContext: geo,
-    confidence, createdAt, complaintSubject, reportCount,
+    id,
+    issueType,
+    severity,
+    complaint,
+    department,
+    riskAssessment: risk,
+    geoContext: geo,
+    confidence,
+    createdAt,
+    complaintSubject,
+    reportCount,
   } = report;
 
-  const ref      = `CH-${(id || "XXXXXXXX").slice(0, 8).toUpperCase()}`;
-  const date     = fmtDate(createdAt);
-  const color    = sevColor(severity);
-  const bg       = sevBg(severity);
+  const ref = `CH-${(id || "XXXXXXXX").slice(0, 8).toUpperCase()}`;
+  const date = fmtDate(createdAt);
+  const color = sevColor(severity);
+  const bg = sevBg(severity);
   const location = geo?.available
     ? [geo.road, geo.suburb, geo.city].filter(Boolean).join(", ")
     : "Location data unavailable";
-  const costStr  = risk?.repairCostEstimate
+  const costStr = risk?.repairCostEstimate
     ? `${fmtINR(risk.repairCostEstimate.low)} – ${fmtINR(risk.repairCostEstimate.high)}`
     : "N/A";
   const isUrgent = severity === "Critical" || severity === "High";
@@ -130,10 +148,20 @@ body { font-family: Georgia, "Times New Roman", serif; font-size: 12.5px; color:
 </html>`;
 
   const w = window.open("", "_blank", "width=820,height=1060,scrollbars=yes");
-  if (!w) { alert("Please allow pop-ups for this site to download the PDF."); return; }
+  if (!w) {
+    alert("Please allow pop-ups for this site to download the PDF.");
+    return;
+  }
   w.document.write(html);
   w.document.close();
   w.addEventListener("load", () => {
-    setTimeout(() => { try { w.focus(); w.print(); } catch { /* user closed */ } }, 300);
+    setTimeout(() => {
+      try {
+        w.focus();
+        w.print();
+      } catch {
+        /* user closed */
+      }
+    }, 300);
   });
 }
