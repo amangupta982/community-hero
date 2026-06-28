@@ -2,7 +2,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchReports, streamReport, requestComplaint } from "../services/api.js";
 import { fileToDataUrl, getLocation } from "../utils/file.js";
 
-export const AGENT_ORDER = ["vision", "verification", "geo", "context", "risk", "complaint", "monitoring"];
+export const AGENT_ORDER = [
+  "vision",
+  "verification",
+  "geo",
+  "context",
+  "risk",
+  "complaint",
+  "monitoring",
+];
 
 const PAGE_SIZE = 20;
 
@@ -11,15 +19,15 @@ function initialSteps() {
 }
 
 export function useReports() {
-  const [reports, setReports]           = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [busy, setBusy]                 = useState(false);
-  const [error, setError]               = useState("");
-  const [draftingId, setDraftingId]     = useState(null);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [draftingId, setDraftingId] = useState(null);
   const [pipelineSteps, setPipelineSteps] = useState(initialSteps());
   const [showPipeline, setShowPipeline] = useState(false);
-  const [hasMore, setHasMore]           = useState(false);
-  const [loadingMore, setLoadingMore]   = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [mergedClusterId, setMergedClusterId] = useState(null); // drives merge animation
 
   const cursorRef = useRef(null);
@@ -51,11 +59,17 @@ export function useReports() {
         if (data.length > 0) cursorRef.current = data[data.length - 1].id;
       }
       setHasMore(data.length === PAGE_SIZE);
-    } catch { /* ignore */ }
-    finally { setLoading(false); setLoadingMore(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
 
-  useEffect(() => { loadReports(); }, [loadReports]);
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
 
   async function loadMore() {
     if (!cursorRef.current || loadingMore || !hasMore) return;
@@ -64,9 +78,7 @@ export function useReports() {
   }
 
   function updateStep(agent, patch) {
-    setPipelineSteps((prev) =>
-      prev.map((s) => (s.agent === agent ? { ...s, ...patch } : s))
-    );
+    setPipelineSteps((prev) => prev.map((s) => (s.agent === agent ? { ...s, ...patch } : s)));
   }
 
   // getDemoCoords comes from useDemo — it returns the next GPS spot and handles
@@ -80,19 +92,22 @@ export function useReports() {
     try {
       let photo, coords;
       if (demoMode) {
-        photo  = await fileToDataUrl(file);
+        photo = await fileToDataUrl(file);
         coords = getDemoCoords();
       } else {
         const locResult = await getLocation();
-        photo  = await fileToDataUrl(file);
+        photo = await fileToDataUrl(file);
         coords = locResult.coords;
         if (!coords) {
-          const msg = {
-            denied:      "Location permission is blocked. Enable location for this site to map the report.",
-            unavailable: "Couldn't get a GPS fix (common on laptops/indoors). Report saved without a pin.",
-            timeout:     "Location timed out. Report saved without a pin — try again outdoors.",
-            unsupported: "This device can't provide location. Report saved without a pin.",
-          }[locResult.reason] || "Location unavailable. Report saved without a pin.";
+          const msg =
+            {
+              denied:
+                "Location permission is blocked. Enable location for this site to map the report.",
+              unavailable:
+                "Couldn't get a GPS fix (common on laptops/indoors). Report saved without a pin.",
+              timeout: "Location timed out. Report saved without a pin — try again outdoors.",
+              unsupported: "This device can't provide location. Report saved without a pin.",
+            }[locResult.reason] || "Location unavailable. Report saved without a pin.";
           setError(msg);
         }
       }
@@ -103,10 +118,18 @@ export function useReports() {
             updateStep(event.agent, { status: "running", message: event.message });
             break;
           case "agent_complete":
-            updateStep(event.agent, { status: "done", result: event.result, durationMs: event.durationMs });
+            updateStep(event.agent, {
+              status: "done",
+              result: event.result,
+              durationMs: event.durationMs,
+            });
             break;
           case "agent_retry":
-            updateStep(event.agent, { status: "running", retrying: true, retryAttempt: event.attempt });
+            updateStep(event.agent, {
+              status: "running",
+              retrying: true,
+              retryAttempt: event.attempt,
+            });
             break;
           case "agent_error":
             updateStep(event.agent, { status: "error", error: event.error });
@@ -141,16 +164,12 @@ export function useReports() {
   async function onGenerateComplaint(id) {
     setDraftingId(id);
     setError("");
-    setReports((prev) =>
-      prev.map((r) => r.id === id ? { ...r, _drafting: true } : r)
-    );
+    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, _drafting: true } : r)));
     try {
       await requestComplaint(id);
       await loadReports({ replace: true });
     } catch (err) {
-      setReports((prev) =>
-        prev.map((r) => r.id === id ? { ...r, _drafting: undefined } : r)
-      );
+      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, _drafting: undefined } : r)));
       setError(err.message);
     } finally {
       setDraftingId(null);

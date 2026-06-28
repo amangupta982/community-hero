@@ -7,11 +7,11 @@ async function apiFetch(path) {
 }
 
 export function useDashboard() {
-  const [stats,           setStats]           = useState(null);
-  const [insights,        setInsights]        = useState(null);
-  const [loading,         setLoading]         = useState(true);
+  const [stats, setStats] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(true);
-  const [lastUpdated,     setLastUpdated]     = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const timerRef = useRef(null);
 
   async function fetchStats() {
@@ -19,16 +19,22 @@ export function useDashboard() {
       const data = await apiFetch("/api/dashboard/stats");
       setStats(data);
       setLastUpdated(new Date());
-    } catch { /* silent refresh failure */ }
-    finally { setLoading(false); }
+    } catch {
+      /* silent refresh failure */
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchInsights() {
     try {
       const data = await apiFetch("/api/dashboard/insights");
       setInsights(data);
-    } catch { /* show without insights */ }
-    finally { setLoadingInsights(false); }
+    } catch {
+      /* show without insights */
+    } finally {
+      setLoadingInsights(false);
+    }
   }
 
   useEffect(() => {

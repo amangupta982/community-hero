@@ -17,7 +17,8 @@ export const DEMO_SCENARIOS = [
     icon: "🌱",
     title: "Seed Reports",
     subtitle: "Populate the city with 6 realistic civic issues",
-    detail: "Inserts pre-built Bangalore reports into Firestore — map, cards, and dashboard all populate instantly.",
+    detail:
+      "Inserts pre-built Bangalore reports into Firestore — map, cards, and dashboard all populate instantly.",
     action: "seed",
     color: "#10b981",
   },
@@ -27,7 +28,8 @@ export const DEMO_SCENARIOS = [
     icon: "🤖",
     title: "Live AI Pipeline",
     subtitle: "Upload any photo → watch 7 agents run in real-time",
-    detail: "GPS is automatically set to MG Road. Gemini Vision → Risk → Complaint Agent all fire live.",
+    detail:
+      "GPS is automatically set to MG Road. Gemini Vision → Risk → Complaint Agent all fire live.",
     action: "pipeline",
     spot: DEMO_SPOTS[2], // Koramangala — fresh location, no merge
     color: "#6366f1",
@@ -38,7 +40,8 @@ export const DEMO_SCENARIOS = [
     icon: "🔀",
     title: "Duplicate Detection",
     subtitle: "Submit a second report 12 m from the seeded pothole",
-    detail: "The geo-clustering agent detects proximity and MERGES the reports. Watch the card animate.",
+    detail:
+      "The geo-clustering agent detects proximity and MERGES the reports. Watch the card animate.",
     action: "duplicate",
     spot: DEMO_SPOTS[1], // 12 m from DEMO_SPOTS[0] = seeded pothole location
     color: "#f59e0b",
@@ -49,7 +52,8 @@ export const DEMO_SCENARIOS = [
     icon: "📊",
     title: "City Dashboard",
     subtitle: "AI insights, ward rankings, SLA tracking",
-    detail: "Live stats computed from all reports. Gemini generates predictive analytics every 5 minutes.",
+    detail:
+      "Live stats computed from all reports. Gemini generates predictive analytics every 5 minutes.",
     action: "dashboard",
     color: "#3b82f6",
   },
@@ -66,13 +70,13 @@ export const DEMO_SCENARIOS = [
 ];
 
 export function useDemo() {
-  const [demoMode, setDemoMode]         = useState(false);
-  const [seedStatus, setSeedStatus]     = useState("idle");  // idle | loading | done | error
-  const [resetStatus, setResetStatus]   = useState("idle");
+  const [demoMode, setDemoMode] = useState(false);
+  const [seedStatus, setSeedStatus] = useState("idle"); // idle | loading | done | error
+  const [resetStatus, setResetStatus] = useState("idle");
   const [activeScenario, setActiveScenario] = useState(null);
 
-  const stepRef          = useRef(0);
-  const overrideSpotRef  = useRef(null); // consumed once by onPhotoChosen
+  const stepRef = useRef(0);
+  const overrideSpotRef = useRef(null); // consumed once by onPhotoChosen
 
   // Called by useReports to get the GPS coordinates for this submission.
   const getDemoCoords = useCallback(() => {
@@ -88,7 +92,7 @@ export function useDemo() {
 
   function toggleDemoMode(enabled) {
     setDemoMode(enabled);
-    stepRef.current     = 0;
+    stepRef.current = 0;
     overrideSpotRef.current = null;
   }
 
@@ -96,7 +100,7 @@ export function useDemo() {
     setSeedStatus("loading");
     try {
       const r = await fetch("/api/demo/seed", { method: "POST" });
-      const data = await r.json();
+      await r.json();
       setSeedStatus(r.ok ? "done" : "error");
       if (r.ok && onDone) await onDone();
     } catch {
@@ -122,8 +126,7 @@ export function useDemo() {
   }
 
   const nextSpotLabel =
-    overrideSpotRef.current?.label ??
-    DEMO_SPOTS[stepRef.current % DEMO_SPOTS.length].label;
+    overrideSpotRef.current?.label ?? DEMO_SPOTS[stepRef.current % DEMO_SPOTS.length].label;
 
   // demoStep is kept for backward-compat with useReports signature.
   const demoStep = stepRef;
